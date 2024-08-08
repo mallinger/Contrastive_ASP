@@ -40,13 +40,15 @@ class Program:
         self.remove_rule(fact)
         head = ' | '.join(fact.head)
         self.rules.add(Rule(f"{{{head}}}."))
+        
+    def __hash__(self):
+        return sum([hash(r) for r in self.rules])
+    
+    def intersection(self, other):
+        return Program(self.rules & other.rules)
 
 
 class Rule:
-    #def __init__(self, head, body):
-    #    self.head = head
-    #    self.body = body
-
     def __init__(self, rule_str):
         if ":-" not in rule_str:
             head = rule_str[:-1].split("|")
@@ -85,3 +87,4 @@ class Rule:
 
     def __hash__(self):
         return hash(f"{sorted(self.head)} :- {sorted(self.body)}")
+    
