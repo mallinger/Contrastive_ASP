@@ -35,7 +35,7 @@ def solve_return_model(programs):
 
 
 def solve_return_all_models(programs):
-    ctl = clingo.Control()
+    ctl = clingo.Control(["--opt-mode=optN"])
     ctl.configuration.solve.models = 0
     for program in programs:
         ctl.add("base", [], program)
@@ -70,6 +70,3 @@ def solve_with_asprin(programs):
     optimum_solutions = parse_asprin_output(output)
     return optimum_solutions
 
-
-# print(solve_return_all_models(["1{a;b;c}1. f(x,y)."]))
-# print(solve_return_model(["1{a;b;c}1. f(x,y)."]))
