@@ -1,6 +1,3 @@
-def rules_still_included(P, translated_contrastive_rules):
-    return P.rules.intersection(translated_contrastive_rules)
-
 
 def variable_name_from_literal(outputs_dict, literals):
     for literal in literals:

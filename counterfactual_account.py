@@ -97,8 +97,7 @@ def counterfactual_accounts(EF, CEP):
         logger.debug("Counterfactual model with all literals: %s", counterfactual_model_all_literals)
         logger.info("Translated: %s", translated_counterfactual_rules)
 
-        P_prime = Program(rules_still_included(
-            P, translated_counterfactual_rules.rules))
+        P_prime = P.intersection(translated_counterfactual_rules)
         A_prime = set(A).intersection(I_primes[i])
         CA.append((P_prime, I_primes[i], A_prime))
 
