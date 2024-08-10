@@ -86,5 +86,7 @@ class Rule:
         return sorted(self.head) == sorted(other.head) and sorted(self.body) == sorted(other.body)
 
     def __hash__(self):
+        if self.is_fact():
+            return hash(f"{sorted(self.head)}")            
         return hash(f"{sorted(self.head)} :- {sorted(self.body)}")
     

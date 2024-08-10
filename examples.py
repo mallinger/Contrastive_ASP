@@ -76,7 +76,7 @@ def ex5():
         )
     )
     P = prg
-    S = Program(set(prg_S))
+    S = Program("".join(set(prg_S)))
     A = []
     I = ["b(three)"]
     E = ["b(three)"]
