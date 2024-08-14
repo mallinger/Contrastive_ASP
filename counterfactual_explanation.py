@@ -49,13 +49,13 @@ def counterfactual_explanations(explanation_frame, contrastive_explanation_probl
     (I, E, F) = contrastive_explanation_problem
     CAs = counterfactual_accounts(explanation_frame, contrastive_explanation_problem)
     CFEs = []
+    
     for P_prime, I_prime, A_prime in CAs:
-
-        Q_delta = P - P_prime
-        Q1 = find_minimal_programs_to_derive(P, E, P_prime)[0]
-
+        Q1s = find_minimal_programs_to_derive(P, E, P_prime)
         A_prime_program = Program(set([Rule(f"{a}.") for a in A_prime]))
-        Q2 = find_minimal_programs_to_derive(P_prime + A_prime_program, F, None)[0]
-
-        CFEs.append((Q1, Q2, Q_delta))
-    return CFEs
+        Q2s = find_minimal_programs_to_derive(P_prime + A_prime_program, F, None)
+        Q_delta = P - P_prime
+        for Q1 in set(Q1s):
+            for Q2 in set(Q2s):
+                CFEs.append((Q1, Q2, Q_delta))
+    return set(CFEs)

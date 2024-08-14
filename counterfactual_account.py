@@ -1,7 +1,7 @@
 import logging
 from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS, FILTER_RULES_STR
 from reification import *
-from solver import solve, solve_return_model, solve_with_asprin
+from solver import solve_return_model, solve_return_all_model_subset_heuristics
 from program import Rule, Program
 from utils import *
 
@@ -10,7 +10,6 @@ logging.basicConfig(encoding='utf-8', level=logging.CRITICAL)
 
 
 def add_optional_rules(reified, P_options):
-
     # optional rules in reified form
     reified_optional_rules = Program("")
     for i, optional_rule in enumerate(P_options.rules):
@@ -29,7 +28,8 @@ def add_optional_rules(reified, P_options):
     # logger.debug(f"Model translated: {reified_to_original_rules('. '.join(model))}")
     optional_rule_literals = list(
         filter(lambda r: r.startswith("optional_rule"), model))
-    logger.debug("Optional Rules of optional_rule predicate: %s", optional_rule_literals)
+    logger.debug("Optional Rules of optional_rule predicate: %s",
+                 optional_rule_literals)
 
     # mark optional rules as such
     for optional_rule_literal in optional_rule_literals:
@@ -75,16 +75,20 @@ def counterfactual_accounts(EF, CEP):
     logger.info("Original Program to reify: %s", to_reify)
     reified = manual_reify(to_reify)
     logger.debug("Original reified rules: %s\n", reified)
-    logger.info("Original reified rules translated: %s\n", reified_to_original_rules(reified))
+    logger.info("Original reified rules translated: %s\n",
+                reified_to_original_rules(reified))
 
     reified = add_optional_rules(reified, P_options)
 
-    logger.debug("Model with optional rules translated: %s \n", reified_to_original_rules(reified))
+    logger.debug("Model with optional rules translated: %s \n",
+                 reified_to_original_rules(reified))
     logger.debug("Model with optional rules reified: %s\n", reified)
 
-    I_primes = solve_with_asprin([str(reified), META_STR, COUNTERFACTUAL_STR])
-    counterfactual_models_all_literals = solve_with_asprin(
-        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR])
+    I_primes = solve_return_all_model_subset_heuristics(
+        [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal")
+
+    counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
+        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal")
 
     CA = []
     for i, counterfactual_model in enumerate(counterfactual_models_all_literals):
@@ -93,8 +97,9 @@ def counterfactual_accounts(EF, CEP):
         translated_counterfactual_rules = reified_to_original_rules(
             Program(counterfactual_model_all_literals))
 
-        logger.info("I': {I_primes[i]}")
-        logger.debug("Counterfactual model with all literals: %s", counterfactual_model_all_literals)
+        logger.info("I': %s", I_primes[i])
+        logger.debug("Counterfactual model with all literals: %s",
+                     counterfactual_model_all_literals)
         logger.info("Translated: %s", translated_counterfactual_rules)
 
         P_prime = P.intersection(translated_counterfactual_rules)

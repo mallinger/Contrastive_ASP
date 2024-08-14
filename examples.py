@@ -70,7 +70,7 @@ def ex5():
                 rule
                 for rule in str(prg)[:-1].split(". ")
                 if rule.startswith(" :-")
-                or rule.startswith("b(")
+                or "|" in rule
                 or rule.startswith("node")
             ],
         )

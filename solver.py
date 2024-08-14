@@ -1,19 +1,4 @@
-import io
-from contextlib import redirect_stdout
 import clingo
-from program_strings import ASPRING_PREFERENCE_STR
-from asprin import asprin
-from utils import parse_asprin_output
-
-
-def solve(programs):
-    ctl = clingo.Control()
-    for program in programs:
-        ctl.add("base", [], program)
-    ctl.ground([("base", [])])
-    ctl.configuration.solve.models = "0"
-    res = ctl.solve()
-    return res
 
 
 def solve_return_model(programs):
@@ -34,8 +19,12 @@ def solve_return_model(programs):
     return "UNSAT"
 
 
-def solve_return_all_models(programs):
-    ctl = clingo.Control(["--opt-mode=optN"])
+def solve_return_all_models(programs, subset_heuristic=False):
+    if subset_heuristic:
+        ctl = clingo.Control(
+            ["--opt-mode=optN", "--heuristic=Domain", "--dom-mod=5,16",  "--enum-mod=domRec"])
+    else:
+        ctl = clingo.Control(["--opt-mode=optN"])
     ctl.configuration.solve.models = 0
     for program in programs:
         ctl.add("base", [], program)
@@ -55,18 +44,10 @@ def solve_return_all_models(programs):
     return "UNSAT"
 
 
-def solve_with_asprin(programs):
-    with open("tmp/asprin_program.lp", "w", encoding="utf-8") as f:
-        f.write(ASPRING_PREFERENCE_STR)
-        for p in programs:
-            f.write(str(p))
-
-    with io.StringIO() as buf, redirect_stdout(buf):
-        try:
-            asprin.main(["tmp/asprin_program.lp", "-n 0", "-q 1"])
-        except SystemExit:
-            pass
-        output = buf.getvalue()
-    optimum_solutions = parse_asprin_output(output)
-    return optimum_solutions
-
+def solve_return_all_model_subset_heuristics(programs, heuristic):
+    if heuristic == "subset-minimal":
+        programs.append("#heuristic rule(_,_). [1, false]")
+        return solve_return_all_models(programs, True)
+    else:
+        programs.append("#heuristic rule(_,_). [1, true]")
+        return solve_return_all_models(programs, True)                                            

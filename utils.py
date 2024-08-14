@@ -66,15 +66,3 @@ def remove_optional_support_literals(reified):
             to_remove.append(rule)
     for rule in to_remove:
         reified.remove_rule(rule)
-
-
-def parse_asprin_output(output):
-    line = output.split("\n")
-    optimum_solutions = []
-    for i, l in enumerate(line):
-        if l.startswith("OPTIMUM FOUND"):
-            optimum = line[i - 1].split(" ")
-            optimum = list(map(lambda l: l.replace(",", ", "), optimum))
-            optimum_solutions.append(optimum)
-
-    return optimum_solutions
