@@ -49,15 +49,10 @@ FILTER_RULES_STR = """
         variable_pos_in_rule_body(L, B):- output(L, BNEO), literal_tuple(BNEO, BNEOL), literal_tuple(B, BNEOL).
         optional_rule(disjunction(A), normal(B)) :- optional(head(H), body_pos(BP), body_neg(BN)), 
                                 variable_in_rule_head(L, A): head_elem(H, L);
+                                head_elem(H, L): variable_in_rule_head(L, A);
                                 variable_pos_in_rule_body(L, B): body_pos(BP, L);
+                                body_pos(BP, L): variable_pos_in_rule_body(L, B);
                                 variable_neg_in_rule_body(L, B): body_neg(BN, L);
+                                body_neg(BN, L): variable_neg_in_rule_body(L, B);
                                 rule(disjunction(A), normal(B)).   
     """
-
-
-ASPRING_PREFERENCE_STR = """
-#preference(p,superset) { 
-  rule(X,Y)
-}.
-#optimize(p).
-"""

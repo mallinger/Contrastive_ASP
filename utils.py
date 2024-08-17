@@ -1,21 +1,3 @@
-
-def variable_name_from_literal(outputs_dict, literals):
-    for literal in literals:
-        if literal in outputs_dict:
-            return outputs_dict[literal]
-
-
-def reverse_dict(dictionary):
-    reversed_dict = {}
-    for k, v in dictionary.items():
-        for e in v:
-            if e in reversed_dict:
-                reversed_dict[e].append(k)
-            if e not in reversed_dict:
-                reversed_dict[e] = [k]
-    return reversed_dict
-
-
 def literals_from_body(body):
     off = 0
     literals = []

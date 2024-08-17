@@ -1,9 +1,9 @@
 import logging
 from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS, FILTER_RULES_STR
-from reification import *
+from reification import optional_rule_to_reified, manual_reify, reified_to_original_rules
 from solver import solve_return_model, solve_return_all_model_subset_heuristics
 from program import Rule, Program
-from utils import *
+from utils import remove_optional_support_literals
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.CRITICAL)
@@ -92,8 +92,8 @@ def counterfactual_accounts(EF, CEP):
 
     CA = []
     for i, counterfactual_model in enumerate(counterfactual_models_all_literals):
-        counterfactual_model_all_literals = ". ".join(counterfactual_model)
-
+        counterfactual_model_all_literals = ". ".join(
+            counterfactual_model) + "."
         translated_counterfactual_rules = reified_to_original_rules(
             Program(counterfactual_model_all_literals))
 
