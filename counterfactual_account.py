@@ -43,6 +43,12 @@ def add_optional_rules(reified, P_options):
 def counterfactual_accounts(EF, CEP):
     (P, S, A) = EF
     (I, E, F) = CEP
+    
+    if E == [""]:
+        raise ValueError("Explanandum must not be empty.") 
+    if F == [""]:
+        raise ValueError("Foil must not be empty.")
+    
     P_options = P - S
     assumptions = [
         f"assumption({assumption})." for assumption in A if assumption not in I
@@ -87,6 +93,8 @@ def counterfactual_accounts(EF, CEP):
     I_primes = solve_return_all_model_subset_heuristics(
         [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal")
 
+    if I_primes == "UNSAT":
+        raise ValueError("Impossible to derive the foil.")
     counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
         [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal")
 

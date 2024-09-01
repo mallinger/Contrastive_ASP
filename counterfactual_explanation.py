@@ -46,8 +46,11 @@ def find_minimal_programs_to_derive(P, E, P_prime):
 
 def counterfactual_explanations(explanation_frame, contrastive_explanation_problem):
     (P, S, A) = explanation_frame
-    (I, E, F) = contrastive_explanation_problem
-    CAs = counterfactual_accounts(explanation_frame, contrastive_explanation_problem)
+    (I, E, F) = contrastive_explanation_problem 
+    try:
+        CAs = counterfactual_accounts(explanation_frame, contrastive_explanation_problem)
+    except ValueError as error:
+        raise error
     CFEs = []
     
     for P_prime, I_prime, A_prime in CAs:

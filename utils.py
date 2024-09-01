@@ -8,9 +8,13 @@ def literals_from_body(body):
             off += 1
         if letter == ")":
             off -= 1
+            if off < 0:
+                raise SyntaxError(f"Missing opening parenthesis at literal \"{literal}\"")
         if letter == "," and off == 0:
             literals.append(literal[:-1].lstrip())
             literal = ""
+    if off != 0:
+        raise SyntaxError("Parenthesis not closed")
     literals.append(literal.lstrip())
     return literals
 

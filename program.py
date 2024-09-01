@@ -1,10 +1,12 @@
-from utils import literals_from_body
+from utils import literals_from_body, predicates_of_program
 
 
 class Program:
 
     def __init__(self, prg):
         if isinstance(prg, str):
+            if prg != "" and not prg.strip().endswith("."):
+                raise SyntaxError("Program does not end with '.'")
             self.rules = set([Rule(f"{rule.lstrip()}.")
                              for rule in prg[:-1].split(".") if rule.strip() != ""])
         else:
@@ -27,7 +29,8 @@ class Program:
     def add_rule(self, rule):
         if isinstance(rule, Rule):
             self.rules.add(rule)
-        self.rules.add(Rule(rule))
+        else:
+            self.rules.add(Rule(rule))
 
     def remove_rule(self, rule):
         self.rules.remove(rule)
@@ -61,7 +64,10 @@ class Rule:
             else:
                 head = head.split("|")
                 self.head = list(map(str.strip, head))
-            self.body = literals_from_body(body)
+            try:
+                self.body = literals_from_body(body)
+            except SyntaxError as e:
+                raise SyntaxError(f"{e} at rule \"{rule_str}\"")
 
     def __repr__(self):
         if self.is_fact():
