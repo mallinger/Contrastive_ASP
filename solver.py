@@ -50,4 +50,5 @@ def solve_return_all_model_subset_heuristics(programs, heuristic):
         return solve_return_all_models(programs, True)
     else:
         programs.append("#heuristic rule(_,_). [1, true]")
-        return solve_return_all_models(programs, True)                                            
+        return solve_return_all_models(programs, True)
+    

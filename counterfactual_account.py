@@ -43,15 +43,15 @@ def add_optional_rules(reified, P_options):
 def counterfactual_accounts(EF, CEP):
     (P, S, A) = EF
     (I, E, F) = CEP
-    
+
     if E == [""]:
-        raise ValueError("Explanandum must not be empty.") 
+        raise ValueError("Explanandum must not be empty.")
     if F == [""]:
         raise ValueError("Foil must not be empty.")
-    
+
     P_options = P - S
     assumptions = [
-        f"assumption({assumption})." for assumption in A if assumption not in I
+        f"assumption({assumption})." for assumption in A if assumption not in I and assumption.strip() != ""
     ]
 
     logger.info("P: %s", P)

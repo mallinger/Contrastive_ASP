@@ -1,4 +1,4 @@
-from utils import literals_from_body, predicates_of_program
+from utils import literals_from_body, verify_head_formating
 
 
 class Program:
@@ -9,8 +9,10 @@ class Program:
                 raise SyntaxError("Program does not end with '.'")
             self.rules = set([Rule(f"{rule.lstrip()}.")
                              for rule in prg[:-1].split(".") if rule.strip() != ""])
-        else:
+        elif isinstance(prg, set) and all(isinstance(r, Rule) for r in prg):
             self.rules = prg
+        else:
+            raise ValueError(f"Program constructor argument needs to be a String or list of Rules, not {type(prg)}.")
 
     def __repr__(self):
         return " ".join(str(r) for r in self.rules)
@@ -63,11 +65,15 @@ class Rule:
                 self.head = []
             else:
                 head = head.split("|")
-                self.head = list(map(str.strip, head))
+                try:
+                    verify_head_formating(head)
+                    self.head = list(map(str.strip, head))
+                except SyntaxError as e:
+                    raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
             try:
                 self.body = literals_from_body(body)
             except SyntaxError as e:
-                raise SyntaxError(f"{e} at rule \"{rule_str}\"")
+                raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
 
     def __repr__(self):
         if self.is_fact():

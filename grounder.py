@@ -10,16 +10,16 @@ def ground(program_string):
         if ":-" not in rule:
             if "(" in rule:
                 constants.extend(re.findall(
-                    r'(?!not)\b[a-z]\w*\b(?!\()', rule))
+                    r'(?!not)\b[a-z0-9]\w*\b(?!\()', rule))
             continue
 
         head, body = rule.split(":-")
         if "(" in head:
-            constants.extend(re.findall(r'(?!not)\b[a-z]\w*\b(?!\()', head))
+            constants.extend(re.findall(r'(?!not)\b[a-z0-9]\w*\b(?!\()', head))
         for literal in literals_from_body(body):
             if "(" in literal:
                 constants.extend(re.findall(
-                    r'(?!not)\b[a-z]\w*\b(?!\()', literal))
+                    r'(?!not)\b[a-z0-9]\w*\b(?!\()', literal))
     constants = list(set(constants))
 
     grounded_rules = Program("")
