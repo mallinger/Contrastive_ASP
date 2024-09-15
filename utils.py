@@ -9,7 +9,8 @@ def literals_from_body(body):
         if letter == ")":
             off -= 1
             if off < 0:
-                raise SyntaxError(f"Missing opening parenthesis at literal \"{literal}\"")
+                raise SyntaxError(
+                    f"Missing opening parenthesis at literal \"{literal}\"")
         if letter == "," and off == 0:
             literals.append(literal[:-1].lstrip())
             literal = ""
@@ -17,6 +18,21 @@ def literals_from_body(body):
         raise SyntaxError("Parenthesis not closed")
     literals.append(literal.lstrip())
     return literals
+
+
+def verify_head_formating(head):
+    for h in head:
+        off = 0
+        for letter in h:
+            if letter == "(":
+                off += 1
+            if letter == ")":
+                off -= 1
+                if off < 0:
+                    raise SyntaxError(
+                        f"Missing opening parenthesis at atom \"{h}\"")
+        if off != 0:
+            raise SyntaxError(f"Parenthesis not closed at atom {h}")
 
 
 def arity_of_literal(literal):
@@ -52,3 +68,12 @@ def remove_optional_support_literals(reified):
             to_remove.append(rule)
     for rule in to_remove:
         reified.remove_rule(rule)
+
+
+def predicates_of_program(p):
+    predicates = []
+    for rule in p.rules:
+        predicates.extend(rule.head)
+        predicates.extend(rule.body)
+    predicates = list(map(lambda p: p.replace("not ", ""), predicates))
+    return list(set(predicates))

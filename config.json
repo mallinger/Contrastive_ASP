@@ -1,0 +1,7 @@
+{
+    "S": "crow :- bird, darkwings. magpie :- bird, whitewings. bird :- feathers, beak, shape. shape. beak. feathers.",
+    "A": ["whitewings"],
+    "I": ["crow", "bird", "feathers", "beak", "shape", "darkwings"],
+    "E": ["crow"],
+    "F": ["magpie"]
+}
