@@ -5,7 +5,7 @@ from solver import solve_return_all_models
 from program import Program, Rule
 
 
-def find_minimal_programs_to_derive(P, E, P_prime):
+def find_minimal_programs_to_derive(P, goals, P_prime):
     to_define = literals_to_define(P.rules)
     actives_dict = {}
     rules_dict = {}
@@ -29,13 +29,12 @@ def find_minimal_programs_to_derive(P, E, P_prime):
     to_solve = (
         " ".join([f"#defined {atom}." for atom in to_define])
         + " ".join([str(s) for s in actives_dict.values()])
-        + f":- not {E[0]}. "
+        + " ".join(f":- not {g}. " for g in goals)
         + ":~ X = #count{N : active(N) }. [X@1] "
         + " ".join([f"{{{a}}}." for a in actives_dict.keys()])
     )
     if P_prime is not None:
         to_solve += ":~ X = #count{N : active_P_prime(N) }. [X@2] "
-
     results = solve_return_all_models([to_solve])
     programs = []
     for result in results:

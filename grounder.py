@@ -5,6 +5,10 @@ from program import Program
 
 
 def ground(program_string):
+    try:
+        Program(program_string)
+    except SyntaxError as s:
+        raise SyntaxError(f"Can not ground program due to syntax error: {s}")
     constants = []
     for rule in program_string.split(".")[:-1]:
         if ":-" not in rule:

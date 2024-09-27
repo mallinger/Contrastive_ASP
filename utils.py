@@ -38,7 +38,17 @@ def verify_head_formating(head):
 def arity_of_literal(literal):
     if "(" not in literal:
         return 0
-    return len(literals_from_body(literal.split("(", 1)[1]))
+    literal = literal.split("(", 1)[1]
+    count = 1
+    off = 0
+    for letter in literal:
+        if letter == "(":
+            off += 1
+        if letter == ")":
+            off -= 1
+        if letter == "," and off == 0:
+            count += 1 
+    return count
 
 
 def literals_to_define(rules):

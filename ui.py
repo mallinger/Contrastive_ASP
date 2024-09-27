@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 
 from contrastive_explanation import contrastive_explanations
 
+from grounder import ground
 from program import Program, Rule
 from utils import predicates_of_program
 
@@ -142,7 +143,7 @@ class Window(QWidget):
     def go(self):
         P = self.program_edit.toPlainText()
         try:
-            program = Program(P)
+            program = ground(P.replace("\n"," "))
         except SyntaxError as syntax_error:
             msg = QMessageBox()
             msg.setText("Error")

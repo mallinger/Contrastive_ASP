@@ -61,20 +61,20 @@ def counterfactual_accounts(EF, CEP):
     logger.info("Explanandum: %s", E)
     logger.info("Foil: %s", F)
 
-    foil = ""
+    foil = []
     for f in F:
-        foil += f"foil({f})."
+        foil.append(f"foil({f}).")
 
-    explanandum = ""
+    explanandum = []
     for e in E:
-        explanandum += f"explanandum({e})."
+        explanandum.append(f"explanandum({e}).")
 
     to_reify = Program(
         " ".join([str(s) for s in S.rules]) + " "
         + " ".join([str(s) for s in P_options.rules]) + " "
         + " ".join(assumptions)
-        + " " + foil
-        + " " + explanandum
+        + " ".join(foil)
+        + " ".join(explanandum)
     )
 
     # reify
