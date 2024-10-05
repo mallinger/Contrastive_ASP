@@ -1,5 +1,5 @@
 import logging
-from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS, FILTER_RULES_STR
+from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS
 from reification import optional_rule_to_reified, manual_reify, reified_to_original_rules
 from solver import solve_return_model, solve_return_all_model_subset_heuristics
 from program import Rule, Program
@@ -7,37 +7,6 @@ from utils import remove_optional_support_literals
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.CRITICAL)
-
-
-def add_optional_rules(reified, P_options):
-    # optional rules in reified form
-    reified_optional_rules = Program("")
-    for i, optional_rule in enumerate(P_options.rules):
-        reified_optional_rules.add_program(
-            optional_rule_to_reified(optional_rule, i))
-    logger.debug("Optional rules self reified: %s\n", reified_optional_rules)
-
-    # combining original and optional rules
-    reified.add_program(reified_optional_rules)
-    logger.debug(
-        "Reified original and self reified optional rules: %s\n", reified)
-
-    model = solve_return_model([str(reified), FILTER_RULES_STR])
-    logger.debug(
-        "Model of whole reified rules with optional_rule predicate: %s\n", model)
-    # logger.debug(f"Model translated: {reified_to_original_rules('. '.join(model))}")
-    optional_rule_literals = list(
-        filter(lambda r: r.startswith("optional_rule"), model))
-    logger.debug("Optional Rules of optional_rule predicate: %s",
-                 optional_rule_literals)
-
-    # mark optional rules as such
-    for optional_rule_literal in optional_rule_literals:
-        rule = Rule(optional_rule_literal.replace("optional_", "") + ".")
-        reified.fact_to_choice(rule)
-
-    remove_optional_support_literals(reified)
-    return reified
 
 
 def counterfactual_accounts(EF, CEP):
@@ -79,16 +48,12 @@ def counterfactual_accounts(EF, CEP):
 
     # reify
     logger.info("Original Program to reify: %s", to_reify)
-    reified = manual_reify(to_reify)
+    meta_atoms = [Rule(r) for r in assumptions + foil + explanandum]
+    reified = manual_reify(to_reify, S, meta_atoms)
+    
     logger.debug("Original reified rules: %s\n", reified)
     logger.info("Original reified rules translated: %s\n",
                 reified_to_original_rules(reified))
-
-    reified = add_optional_rules(reified, P_options)
-
-    logger.debug("Model with optional rules translated: %s \n",
-                 reified_to_original_rules(reified))
-    logger.debug("Model with optional rules reified: %s\n", reified)
 
     I_primes = solve_return_all_model_subset_heuristics(
         [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal")

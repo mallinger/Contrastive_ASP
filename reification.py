@@ -39,14 +39,17 @@ def manual_reify_body(body, atoms, rule_index, reified, amount_of_rules):
             reified.add_rule(f"literal_tuple({current_atom_index}).")
 
 
-def manual_reify(program):
+def manual_reify(program, S, meta_atoms):
     atoms = {}
     reified = Program("")
     rules = program.rules
     amount_of_rules = len(rules)
     for rule_index, rule in enumerate(rules):
-        reified.add_rule(
-            f"rule(disjunction({rule_index}), normal({rule_index})).")
+        if rule in S.rules or rule in meta_atoms:
+            reified.add_rule(f"rule(disjunction({rule_index}), normal({rule_index})).")
+        else:
+            reified.add_rule(f"{{rule(disjunction({rule_index}), normal({rule_index}))}}.")    
+        
         if rule.is_constraint():
             manual_reify_body(rule.body, atoms, rule_index,
                               reified, amount_of_rules)
