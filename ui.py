@@ -265,7 +265,8 @@ class Window(QWidget):
 
     def program_edit_changed(self):
         try:
-            new_program = Program(self.program_edit.toPlainText())
+            program_string = self.program_edit.toPlainText()
+            new_program = Program(program_string.replace("\n"," "))
             if new_program != self.program:
                 self.program = new_program
                 self.update_ui()
@@ -277,16 +278,12 @@ class Window(QWidget):
         self.assumption_menu.clear()
         self.explanandum_menu.clear()
         self.foil_menu.clear()
-        for predicate in self.predicates:
-            self.assumption_menu.addAction(
-                predicate, lambda x=predicate: self.add_assumption(x))
-            self.explanandum_menu.addAction(
-                predicate, lambda x=predicate: self.add_explanandum(x))
-            self.foil_menu.addAction(
-                predicate, lambda x=predicate: self.add_foil(x))
-            
+        self.update_autocomplete(self.predicates)
+        self.update_menus()
         deleteItemsOfLayout(self.rules_select_layout)
         self.add_selected_rules_layouts()
+        self.S = self.program.intersection(self.S)
+        self.S_edit.setText(str(self.S))
 
     def s_selected(self, rule, rule_edit):
         if rule in self.S.rules:
@@ -321,7 +318,7 @@ class Window(QWidget):
             current_explanandum.remove(predicate)
         else:
             current_explanandum.append(predicate)
-
+            
         if '' in current_explanandum:
             current_explanandum.remove('')
         self.explanandum_edit.setText(", ".join(current_explanandum))
