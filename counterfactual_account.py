@@ -3,7 +3,6 @@ from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS
 from reification import optional_rule_to_reified, manual_reify, reified_to_original_rules
 from solver import solve_return_model, solve_return_all_model_subset_heuristics
 from program import Rule, Program
-from utils import remove_optional_support_literals
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.CRITICAL)

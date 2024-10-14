@@ -1,3 +1,5 @@
+import re
+
 def literals_from_body(body):
     off = 0
     literals = []
@@ -22,6 +24,8 @@ def literals_from_body(body):
 
 def verify_head_formating(head):
     for h in head:
+        if re.search(r'[a-zA-Z0-9]\s+[a-zA-Z0-9]', h):
+            raise SyntaxError(f"Atom contains whitespace \"{h}\"")
         off = 0
         for letter in h:
             if letter == "(":
@@ -33,7 +37,6 @@ def verify_head_formating(head):
                         f"Missing opening parenthesis at atom \"{h}\"")
         if off != 0:
             raise SyntaxError(f"Parenthesis not closed at atom {h}")
-
 
 def arity_of_literal(literal):
     if "(" not in literal:
@@ -63,21 +66,6 @@ def literals_to_define(rules):
                     literal = literal.split("(")[0]
                 to_define.append(literal + f"/{arity}")
     return to_define
-
-
-def remove_optional_support_literals(reified):
-    to_remove = []
-    for rule in reified.rules:
-        rule_str = str(rule)
-        if (
-            rule_str.startswith("optional(")
-            or rule_str.startswith("body_pos")
-            or rule_str.startswith("body_neg")
-            or rule_str.startswith("head_elem")
-        ):
-            to_remove.append(rule)
-    for rule in to_remove:
-        reified.remove_rule(rule)
 
 
 def predicates_of_program(p):
