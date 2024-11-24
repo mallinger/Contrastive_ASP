@@ -24,7 +24,7 @@ def literals_from_body(body):
 
 def verify_head_formating(head):
     for h in head:
-        if re.search(r'[a-zA-Z0-9]\s+[a-zA-Z0-9]', h):
+        if not h.lstrip().startswith("{") and re.search(r'[a-zA-Z0-9]\s+[a-zA-Z0-9]', h):
             raise SyntaxError(f"Atom contains whitespace \"{h}\"")
         off = 0
         for letter in h:
