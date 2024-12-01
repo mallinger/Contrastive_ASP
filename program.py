@@ -75,6 +75,15 @@ class Rule:
             except SyntaxError as e:
                 raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
 
+    def __lt__(self, other):
+        if self.is_fact() and not other.is_fact():
+            return True
+        if self.is_constraint() and not other.is_constraint():
+            return False
+        if not self.is_constraint() and other.is_constraint():
+            return True
+        return len(self.head) + len(self.body) < len(other.head) + len(other.body) 
+
     def __repr__(self):
         if self.is_fact():
             return f"{' | '.join(self.head)}."

@@ -54,7 +54,7 @@ class Window(QWidget):
         add_config_layout.addWidget(config_label)
         add_config_layout.addWidget(add_config_button)
 
-        S_label = QLabel(text="S:")
+        S_label = QLabel(text="Fixed Knowledge:")
         S_label.setStyleSheet(LABEL_STYLE)
         self.S_edit = QTextEdit()
         self.S_edit.textChanged.connect(self.S_edit_text_changed)
@@ -225,6 +225,7 @@ class Window(QWidget):
 
             self.update_menus()
             self.add_selected_rules_layouts()
+            self.update_S_selection_layouts()
 
     def update_menus(self):
         for predicate in self.predicates:
@@ -236,7 +237,7 @@ class Window(QWidget):
                 predicate, lambda x=predicate: self.add_foil(x))
 
     def add_selected_rules_layouts(self):
-        for rule in self.program.rules:
+        for rule in sorted(self.program.rules):
             rule_hbox = QHBoxLayout()
             rule_s_button = QPushButton(text="S")
             rule_edit = QLineEdit(text=str(rule))
@@ -284,6 +285,7 @@ class Window(QWidget):
         self.add_selected_rules_layouts()
         self.S = self.program.intersection(self.S)
         self.S_edit.setText(str(self.S))
+        self.update_S_selection_layouts()
 
     def s_selected(self, rule, rule_edit):
         if rule in self.S.rules:
