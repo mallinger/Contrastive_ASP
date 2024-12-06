@@ -1,6 +1,6 @@
 import sys
 import json
-from PySide6.QtWidgets import QCompleter, QMessageBox, QFileDialog, QApplication, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QLineEdit, QTextEdit, QMenu
+from PySide6.QtWidgets import QFormLayout, QScrollArea, QCompleter, QMessageBox, QFileDialog, QApplication, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QLineEdit, QTextEdit, QMenu
 from PySide6.QtGui import QTextCharFormat, QColor
 from PySide6.QtCore import Qt
 
@@ -42,7 +42,18 @@ class Window(QWidget):
         add_program_layout.addWidget(add_program_button)
         self.program_edit = QTextEdit()
         self.program_edit.textChanged.connect(self.program_edit_changed)
-        self.rules_select_layout = QVBoxLayout()
+        
+        
+        self.rules_select_scroll_area = QScrollArea()
+        self.rules_select_scroll_area.setWidgetResizable(True)
+        self.rules_select_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.rules_select_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        widget = QWidget()
+        self.rules_select_layout = QVBoxLayout(widget)
+    
+        
+        self.rules_select_scroll_area.setWidget(widget)
 
         # middle elements
         config_label = QLabel(text="Configuration:")
@@ -100,7 +111,7 @@ class Window(QWidget):
         start_button = QPushButton(text="Go!")
         start_button.setStyleSheet(LABEL_STYLE)
         start_button.clicked.connect(self.go)
-        result_label = QLabel(text="Contrastrive Explanations:")
+        result_label = QLabel(text="Contrastive Explanations:")
         result_label.setStyleSheet(LABEL_STYLE)
         self.result_edit = QTextEdit()
         reset_button = QPushButton(text="Reset")
@@ -115,7 +126,7 @@ class Window(QWidget):
 
         self.left_box.addLayout(add_program_layout)
         self.left_box.addWidget(self.program_edit)
-        self.left_box.addLayout(self.rules_select_layout)
+        self.left_box.addWidget(self.rules_select_scroll_area)
 
         middle_box.addLayout(add_config_layout)
         middle_box.addWidget(S_label)
@@ -146,7 +157,7 @@ class Window(QWidget):
             program = ground(P.replace("\n"," "))
         except SyntaxError as syntax_error:
             msg = QMessageBox()
-            msg.setText("Error")
+            msg.setText("Syntax Error")
             msg.setInformativeText(str(syntax_error))
             msg.setIcon(QMessageBox.Critical)
             msg.exec()
@@ -175,7 +186,11 @@ class Window(QWidget):
             CEs_str = list(map(str, CEs))
             self.result_edit.setText("\n\n".join(CEs_str))
         except ValueError as error:
-            self.result_edit.setText(str(error))
+            msg = QMessageBox()
+            msg.setText("Error")
+            msg.setInformativeText(str(error))
+            msg.setIcon(QMessageBox.Critical)
+            msg.exec()
 
     def reset(self):
         self.program = Program("")
