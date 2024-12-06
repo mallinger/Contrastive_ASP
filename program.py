@@ -51,6 +51,9 @@ class Program:
 
     def intersection(self, other):
         return Program(self.rules & other.rules)
+    
+    def contains_atom(self, atom):
+        return any(r.contains_atom(atom) for r in self.rules)
 
 
 class Rule:
@@ -100,6 +103,15 @@ class Rule:
 
     def is_constraint(self):
         return self.head == []
+    
+    def contains_atom(self, atom):
+        if atom in self.head:
+            return True
+        for literal in self.body:
+            if atom in literal.replace("not ",""):
+                return True
+        return False
+        
 
     def __eq__(self, other):
         if not isinstance(other, Rule):
