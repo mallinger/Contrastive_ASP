@@ -23,6 +23,7 @@ def expand_range(program_string):
     return result_string
 
 def ground(program_string):
+    program_string = program_string.strip()
 
     while ".." in program_string:
         program_string = expand_range(program_string).strip()

@@ -3,7 +3,6 @@ import clingo
 
 def solve_return_model(programs):
     ctl = clingo.Control()
-    ctl.configuration.solve.models = 0
     for program in programs:
         ctl.add("base", [], program)
     ctl.ground([("base", [])])
