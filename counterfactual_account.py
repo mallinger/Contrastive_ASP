@@ -3,6 +3,7 @@ from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS
 from reification import optional_rule_to_reified, manual_reify, reified_to_original_rules
 from solver import solve_return_model, solve_return_all_model_subset_heuristics
 from program import Rule, Program
+from utils import remove_meta_atoms
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding='utf-8', level=logging.CRITICAL)
@@ -16,6 +17,12 @@ def counterfactual_accounts(EF, CEP):
         raise ValueError("Explanandum must not be empty.")
     if F == [""]:
         raise ValueError("Foil must not be empty.")
+
+    if any( not P.contains_atom(e) for e in E):
+        raise ValueError("Explanandum does not appear in the program.")
+    
+    if any(not P.contains_atom(f) for f in F):
+        raise ValueError("Foil does not appear in the program.")
 
     P_options = P - S
     assumptions = [
@@ -56,7 +63,7 @@ def counterfactual_accounts(EF, CEP):
 
     I_primes = solve_return_all_model_subset_heuristics(
         [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal")
-
+    
     if I_primes == "UNSAT":
         raise ValueError("Impossible to derive the foil.")
     counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
@@ -69,6 +76,7 @@ def counterfactual_accounts(EF, CEP):
         translated_counterfactual_rules = reified_to_original_rules(
             Program(counterfactual_model_all_literals))
 
+        I_primes = remove_meta_atoms(I_primes)
         logger.info("I': %s", I_primes[i])
         logger.debug("Counterfactual model with all literals: %s",
                      counterfactual_model_all_literals)

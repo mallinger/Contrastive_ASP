@@ -1,4 +1,4 @@
-from utils import literals_from_body, verify_head_formating
+from utils import literals_from_body, verify_head_formating, verify_comma_placement
 
 
 class Program:
@@ -51,14 +51,27 @@ class Program:
 
     def intersection(self, other):
         return Program(self.rules & other.rules)
+    
+    def contains_atom(self, atom):
+        return any(r.contains_atom(atom) for r in self.rules)
 
 
 class Rule:
     def __init__(self, rule_str):
+        try:
+            verify_comma_placement(rule_str)
+        except SyntaxError as e:
+            raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
+        
         if ":-" not in rule_str:
             head = rule_str[:-1].split("|")
             self.head = list(map(str.strip, head))
             self.body = []
+            try:
+                verify_head_formating(head)
+                self.head = list(map(str.strip, head))
+            except SyntaxError as e:
+                raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
         else:
             head, body = rule_str[:-1].split(":-")
             if head.strip() == "":
@@ -100,6 +113,15 @@ class Rule:
 
     def is_constraint(self):
         return self.head == []
+    
+    def contains_atom(self, atom):
+        if atom in self.head:
+            return True
+        for literal in self.body:
+            if atom in literal.replace("not ",""):
+                return True
+        return False
+        
 
     def __eq__(self, other):
         if not isinstance(other, Rule):
