@@ -152,6 +152,7 @@ class Window(QWidget):
         self.setLayout(outer_box)
 
     def go(self):
+        self.result_edit.setText("")
         P = self.program_edit.toPlainText()
         try:
             program = ground(P.replace("\n"," "))
@@ -165,8 +166,10 @@ class Window(QWidget):
         S = self.S_edit.toPlainText()
         A = self.assumptions_edit.text().split(",")
         I = self.interpretation_edit.toPlainText().split(", ")
-        E = self.explanandum_edit.text().strip().split(",")
-        F = self.foil_edit.text().strip().split(",")
+        E = self.explanandum_edit.text().split(",")
+        E = list(map(str.strip, E))
+        F = self.foil_edit.text().split(",")
+        F = list(map(str.strip, F))
         print(f"""Go called with program:{P}
               S: {S}
               Assumptions: {A}

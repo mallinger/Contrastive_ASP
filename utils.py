@@ -38,6 +38,11 @@ def verify_head_formating(head):
         if off != 0:
             raise SyntaxError(f"Parenthesis not closed at atom {h}")
 
+def verify_comma_placement(rule):
+    rule = rule.replace(" ","")
+    if rule.startswith(",") or re.search(r',(?=[^\w-])|(?<=[^\w\)]),', rule):
+        raise SyntaxError(f"Missplaced comma")
+
 def arity_of_literal(literal):
     if "(" not in literal:
         return 0
@@ -75,3 +80,11 @@ def predicates_of_program(p):
         predicates.extend(rule.body)
     predicates = list(map(lambda p: p.replace("not ", ""), predicates))
     return list(set(predicates))
+
+def remove_meta_atoms(atoms_list):
+    meta_predicates = ["explanandum", "foil", "assumption"]
+    result = []
+    for atoms in atoms_list:
+        result.append([atom for atom in atoms if not any (atom.startswith(m) for m in meta_predicates)])
+    return result
+

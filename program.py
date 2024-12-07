@@ -1,4 +1,4 @@
-from utils import literals_from_body, verify_head_formating
+from utils import literals_from_body, verify_head_formating, verify_comma_placement
 
 
 class Program:
@@ -58,10 +58,20 @@ class Program:
 
 class Rule:
     def __init__(self, rule_str):
+        try:
+            verify_comma_placement(rule_str)
+        except SyntaxError as e:
+            raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
+        
         if ":-" not in rule_str:
             head = rule_str[:-1].split("|")
             self.head = list(map(str.strip, head))
             self.body = []
+            try:
+                verify_head_formating(head)
+                self.head = list(map(str.strip, head))
+            except SyntaxError as e:
+                raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
         else:
             head, body = rule_str[:-1].split(":-")
             if head.strip() == "":
