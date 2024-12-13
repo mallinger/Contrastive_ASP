@@ -227,7 +227,7 @@ class Window(QWidget):
         if path_to_file == '':
             return
         with open(path_to_file, 'r', encoding='utf-8') as file:
-            program_str = file.read().strip()
+            program_str = file.read().strip().replace("\n", " ")
             faulty_rules = []
             for rule in program_str[:-1].split(". "):
                 try:
@@ -273,6 +273,15 @@ class Window(QWidget):
             return
         with open(path_to_file, 'r', encoding='utf-8') as file:
             config = json.load(file)
+            
+        if any(name not in config for name in ["S","A","I","E","F"]):
+            msg = QMessageBox()
+            msg.setText("Error")
+            msg.setInformativeText("""The names of the json file are incorrect.\nThe following names need to be included:\nS, A, I, E, F""")
+            msg.setIcon(QMessageBox.Critical)
+            msg.exec()
+            return
+        
         self.S = Program(config["S"])
         self.S_edit.setText(str(self.S))
         self.update_S_selection_layouts()

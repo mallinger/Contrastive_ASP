@@ -45,8 +45,7 @@ def counterfactual_accounts(EF, CEP):
         explanandum.append(f"explanandum({e}).")
 
     to_reify = Program(
-        " ".join([str(s) for s in S.rules]) + " "
-        + " ".join([str(s) for s in P_options.rules]) + " "
+        " ".join([str(r) for r in P.rules]) + " "
         + " ".join(assumptions)
         + " ".join(foil)
         + " ".join(explanandum)
@@ -68,22 +67,23 @@ def counterfactual_accounts(EF, CEP):
         raise ValueError("Impossible to derive the foil.")
     counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
         [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal")
-
+    
+    I_primes = remove_meta_atoms(I_primes)
     CA = []
-    for i, counterfactual_model in enumerate(counterfactual_models_all_literals):
+    for i, I_prime in enumerate(I_primes):
+        counterfactual_model = counterfactual_models_all_literals[i]
         counterfactual_model_all_literals = ". ".join(
             counterfactual_model) + "."
         translated_counterfactual_rules = reified_to_original_rules(
             Program(counterfactual_model_all_literals))
 
-        I_primes = remove_meta_atoms(I_primes)
-        logger.info("I': %s", I_primes[i])
+        logger.info("I': %s", I_prime)
         logger.debug("Counterfactual model with all literals: %s",
                      counterfactual_model_all_literals)
         logger.info("Translated: %s", translated_counterfactual_rules)
 
         P_prime = P.intersection(translated_counterfactual_rules)
-        A_prime = set(A).intersection(I_primes[i])
-        CA.append((P_prime, I_primes[i], A_prime))
+        A_prime = set(A).intersection(I_prime)
+        CA.append((P_prime, I_prime, A_prime))
 
     return CA
