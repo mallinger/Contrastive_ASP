@@ -23,7 +23,11 @@ def expand_range(program_string):
     return result_string
 
 def ground(program_string):
+    program_string = program_string.strip()
 
+    if re.search(r"(?<!\d)\.\.", program_string) is not None or re.search(r"\.\.(?!\d)", program_string) is not None:
+        raise SyntaxError("Program contains invalid range notation.")
+        
     while ".." in program_string:
         program_string = expand_range(program_string).strip()
 
