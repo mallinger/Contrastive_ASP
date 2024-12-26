@@ -155,7 +155,7 @@ class Window(QWidget):
         self.result_edit.setText("")
         P = self.program_edit.toPlainText()
         try:
-            program = ground(P.replace("\n"," "))
+            program = ground(P.replace("\n"," ").strip())
         except SyntaxError as syntax_error:
             msg = QMessageBox()
             msg.setText("Syntax Error")
@@ -238,7 +238,7 @@ class Window(QWidget):
 
             self.program_edit.setText(str(self.program).replace(". ", ".\n"))
 
-            self.predicates = predicates_of_program(self.program)
+            self.predicates = predicates_of_program(ground(str(self.program)))
             self.update_autocomplete(self.predicates)
 
             self.update_menus()
@@ -302,7 +302,7 @@ class Window(QWidget):
             pass
 
     def update_ui(self):
-        self.predicates = predicates_of_program(self.program)
+        self.predicates = predicates_of_program(ground(str(self.program)))
         self.assumption_menu.clear()
         self.explanandum_menu.clear()
         self.foil_menu.clear()

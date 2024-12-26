@@ -46,8 +46,8 @@ def counterfactual_accounts(EF, CEP):
 
     to_reify = Program(
         " ".join([str(r) for r in P.rules]) + " "
-        + " ".join(assumptions)
-        + " ".join(foil)
+        + " ".join(assumptions) + " "
+        + " ".join(foil) + " "
         + " ".join(explanandum)
     )
 

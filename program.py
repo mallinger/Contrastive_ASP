@@ -7,8 +7,9 @@ class Program:
         if isinstance(prg, str):
             if prg != "" and not prg.strip().endswith("."):
                 raise SyntaxError("Program does not end with '.'")
+            prg = prg.strip()
             self.rules = set([Rule(f"{rule.lstrip()}.")
-                             for rule in prg[:-1].split(".") if rule.strip() != ""])
+                             for rule in prg[:-1].split(". ") if rule.strip() != ""])
         elif isinstance(prg, set) and all(isinstance(r, Rule) for r in prg):
             self.rules = prg
         else:
