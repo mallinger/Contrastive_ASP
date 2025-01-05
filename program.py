@@ -115,6 +115,11 @@ class Rule:
     def is_constraint(self):
         return self.head == []
     
+    def is_choice(self):
+        if len(self.head) != 1:
+            return False
+        return self.head[0].startswith("{")
+    
     def contains_atom(self, atom):
         if atom in self.head:
             return True

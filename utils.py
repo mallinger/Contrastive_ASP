@@ -88,3 +88,40 @@ def remove_meta_atoms(atoms_list):
         result.append([atom for atom in atoms if not any (atom.startswith(m) for m in meta_predicates)])
     return result
 
+def extract_choice_elements(choice_elements_str):
+    choice_elements = choice_elements_str.split(";")
+    choice_elements_dict = {}
+    for choice_element in choice_elements:
+        if ":" in choice_element:
+            atom, body = choice_element.split(":")
+            choice_elements_dict[atom] = literals_from_body(body)
+        else: 
+            choice_elements_dict[choice_element] = []
+    return choice_elements_dict
+
+def parse_choice_atom(choice_atom):
+    choice_elements_str = choice_atom[choice_atom.index("{") + 1: choice_atom.index("}")]
+    choice_elements = extract_choice_elements(choice_elements_str)
+    relation_guard = choice_atom[choice_atom.index("}") + 1 :].strip()
+    if relation_guard != "":
+        relation, guard = relation_guard.split(" ")
+        return choice_elements, relation, guard
+    return choice_elements, "", ""
+
+def range_inside_choice(rule, start_index):
+    is_inside = False
+    for letter in rule[:start_index]:
+        if letter == "{":
+            is_inside = True
+        if letter == "}":
+            is_inside = False
+    return is_inside
+
+def predicate_of_range(rule, start_index):
+    predicate = ""
+    for letter in rule[start_index::-1]:
+        if letter.isalnum():
+            predicate = letter + predicate
+        else:
+            break
+    return predicate
