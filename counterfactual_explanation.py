@@ -31,7 +31,7 @@ def find_minimal_programs_to_derive(P, goals, P_prime):
         + " ".join([str(s) for s in actives_dict.values()])
         + " ".join(f":- not {g}. " for g in goals)
         + ":~ X = #count{N : active(N) }. [X@1] "
-        + " ".join([f"{{{a}}}." for a in actives_dict.keys()])
+        + " ".join([f"{{{a}}}." for a in actives_dict])
     )
     if P_prime is not None:
         to_solve += ":~ X = #count{N : active_P_prime(N) }. [X@2] "
@@ -45,13 +45,13 @@ def find_minimal_programs_to_derive(P, goals, P_prime):
 
 def counterfactual_explanations(explanation_frame, contrastive_explanation_problem):
     (P, S, A) = explanation_frame
-    (I, E, F) = contrastive_explanation_problem 
+    (I, E, F) = contrastive_explanation_problem
     try:
         CAs = counterfactual_accounts(explanation_frame, contrastive_explanation_problem)
     except ValueError as error:
         raise error
     CFEs = []
-    
+
     for P_prime, I_prime, A_prime in CAs:
         Q1s = find_minimal_programs_to_derive(P, E, P_prime)
         A_prime_program = Program(set([Rule(f"{a}.") for a in A_prime]))

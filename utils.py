@@ -40,8 +40,8 @@ def verify_head_formating(head):
 
 def verify_comma_placement(rule):
     rule = rule.replace(" ","")
-    if rule.startswith(",") or re.search(r',(?=[^\w-])|(?<=[^\w\)]),', rule):
-        raise SyntaxError(f"Missplaced comma")
+    if rule.startswith(",") or re.search(r',(?!{|#|\()(?=[^\w-])|(?<=[^\w\)]),', rule):
+        raise SyntaxError("Missplaced comma")
 
 def arity_of_literal(literal):
     if "(" not in literal:
@@ -55,7 +55,7 @@ def arity_of_literal(literal):
         if letter == ")":
             off -= 1
         if letter == "," and off == 0:
-            count += 1 
+            count += 1
     return count
 
 
@@ -64,6 +64,8 @@ def literals_to_define(rules):
     for rule in rules:
         if not rule.is_fact():
             for literal in rule.body:
+                if literal.startswith("{"):
+                    continue
                 if literal.startswith("not "):
                     literal = literal.replace("not ", "")
                 arity = arity_of_literal(literal)
@@ -94,9 +96,9 @@ def extract_choice_elements(choice_elements_str):
     for choice_element in choice_elements:
         if ":" in choice_element:
             atom, body = choice_element.split(":")
-            choice_elements_dict[atom] = literals_from_body(body)
-        else: 
-            choice_elements_dict[choice_element] = []
+            choice_elements_dict[atom.strip()] = literals_from_body(body.strip())
+        else:
+            choice_elements_dict[choice_element.strip()] = []
     return choice_elements_dict
 
 def parse_choice_atom(choice_atom):
@@ -104,8 +106,8 @@ def parse_choice_atom(choice_atom):
     choice_elements = extract_choice_elements(choice_elements_str)
     relation_guard = choice_atom[choice_atom.index("}") + 1 :].strip()
     if relation_guard != "":
-        relation, guard = relation_guard.split(" ")
-        return choice_elements, relation, guard
+        relation, guard,_ = re.split(r'(\d+)', relation_guard)
+        return choice_elements, relation.strip(), int(guard)
     return choice_elements, "", ""
 
 def range_inside_choice(rule, start_index):
@@ -117,11 +119,55 @@ def range_inside_choice(rule, start_index):
             is_inside = False
     return is_inside
 
-def predicate_of_range(rule, start_index):
-    predicate = ""
+def start_index_of_predicate(rule, start_index):
+    is_predicate = False
+    i = -1
     for letter in rule[start_index::-1]:
-        if letter.isalnum():
-            predicate = letter + predicate
-        else:
+        if is_predicate and not letter.isalnum():
             break
-    return predicate
+        if letter == "(":
+            is_predicate = True
+        i += 1
+    return start_index - i
+
+def choice_literal_of_rule(body):
+    for literal in body:
+        if literal.replace("not ", "").startswith("{"):
+            return literal
+
+def choice_atom_without_relation(choice_atom):
+    return choice_atom[0:choice_atom.index("}") + 1]
+
+def are_choice_atoms_equal(first, second):
+    choice_elements, relation, guard = parse_choice_atom(first)
+    choice_elements_other, relation_other, guard_other = parse_choice_atom(second)
+    if choice_elements != choice_elements_other or relation != relation_other or guard != guard_other:
+        return False
+    return True
+
+def unfold_choice_atom_to_ordered_string(atom):
+    choice_elements, relation, guard = parse_choice_atom(atom)
+    result = ""
+    for key in sorted(choice_elements.keys()):
+        values = sorted(choice_elements[key])
+        result += key + ":" + ",".join(values)
+
+    return result + relation + str(guard)
+
+relations = {
+    "g" : " > ",
+    "geq" : " >= ",
+    "l" : " < ",
+    "leq" : " <= ",
+    "eq" : " = ",
+    "" : ""
+}
+
+relations_rev = {
+    ">" : "g",
+    ">=" : "geq",
+    "<" : "l",
+    "<=" : "leq",
+    "=" : "eq",
+    "" : ""
+}
