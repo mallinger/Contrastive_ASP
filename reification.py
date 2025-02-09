@@ -317,16 +317,20 @@ def find_choice_rule_with_id(program, rule_id):
     for rule in program.rules:
         if f"helper(l{rule_id})" in rule.body or f"not helper(l{rule_id})" in rule.body:
             if not f"not helper(m{rule_id})" in rule.body:
+                choice_rule = Rule(str(rule))
                 if f"helper(l{rule_id})" in rule.body:
-                    rule.remove_literal(f"helper(l{rule_id})")
+                    choice_rule.remove_literal(f"helper(l{rule_id})")
                 else:
-                    rule.remove_literal(f"not helper(l{rule_id})")
-                return rule
+                    choice_rule.remove_literal(f"not helper(l{rule_id})")
+                program.remove_rule(rule)
+                return choice_rule
 
     for rule in program.rules:
         if f"helper(n{rule_id})" in rule.body:
-            rule.remove_literal(f"helper(n{rule_id})")
-            return rule
+            choice_rule = Rule(str(rule))
+            choice_rule.remove_literal(f"helper(n{rule_id})")
+            program.remove_rule(rule)
+            return choice_rule
 
 def recreate_choice_rules_head(normal_program, choice_info_elements):
     for choice_rule in choice_info_elements:
@@ -334,34 +338,40 @@ def recreate_choice_rules_head(normal_program, choice_info_elements):
         choice_head = find_choice_head_with_id(normal_program, f"helper(a{rule_id})")
         if choice_head is None:
             continue
-        if  len(choice_rule) > 1:
+        if len(choice_rule) > 1:
             choice_body = find_choice_body_with_id(normal_program, f"helper(a{rule_id})")
             relation = choice_rule[1]
             guard = choice_rule[2]
             if choice_body != []:
-                normal_program.add_rule(f"{choice_head}{relations[relation]}{guard} :- {choice_body}.")
+                normal_program.add_rule(f"{choice_head}{relations[relation]}{guard} :- {",".join(choice_body)}.")
             else:
                 normal_program.add_rule(f"{choice_head}{relations[relation]}{guard}.")
         else:
-            normal_program.add_rule(f"{choice_head}.")
+            choice_body = find_choice_body_with_id(normal_program, f"helper(a{rule_id})")
+            if choice_body != []:
+                 normal_program.add_rule(f"{choice_head} :- {",".join(choice_body)}.")
+            else:
+                normal_program.add_rule(f"{choice_head}.")
 
 def recreate_choice_rules_body(normal_program, choice_info_elements):
     for choice_rule_info in choice_info_elements:
         rule_id = choice_rule_info[0]
         choice_rule = find_choice_rule_with_id(normal_program, rule_id)
+        
         if choice_rule is None:
             continue
 
         choice_rule_body = find_choice_body_with_id(normal_program, f"helper(l{rule_id})")
         choice_atom = choice_literal_of_rule(choice_rule_body)
         choice_elements = choice_atom_without_relation(choice_atom)
-
+        
         if len(choice_rule_info) > 1:
             relation = choice_rule_info[1]
             guard = choice_rule_info[2]
             choice_rule.add_literal(f"{choice_elements}{relations[relation]}{guard}")
         else:
             choice_rule.add_literal(f"{choice_elements}")
+        normal_program.add_rule(choice_rule)
 
 def recreate_choice_rules(normal_program):
     choice_info_rules = [str(rule) for rule in normal_program.rules if "choice_info" in str(rule)]
@@ -401,17 +411,17 @@ def reified_to_original_rules(reified_program):
     normal_program = Program("")
 
     for rule in reified_rules:
+        rule = rule.strip()
         if rule.startswith("{"):
             element = rule.replace("{rule(", "")[:-2]
         else:
             element = rule.replace("rule(", "")[:-1]
         head, body = element.split(", ", 1)
-
+        
         rule_head = reified_head_to_original_head(
             head, atoms_of_rules_dict, outputs_dict)
         rule_body = reified_body_to_original_body(
             body, literals_of_rules_dict, weighted_literals_of_rule_dict, outputs_dict)
-
         if "choice" in rule:
             rule_head = "{" + '; '.join(rule_head) + "}"
         else:
@@ -422,7 +432,6 @@ def reified_to_original_rules(reified_program):
         else:
             normal_program.add_rule(
                 (f"{rule_head} :- {', '.join(rule_body)}."))
-
     recreate_choice_rules(normal_program)
     remove_helper_rules(normal_program)
     return normal_program

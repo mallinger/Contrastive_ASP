@@ -1,5 +1,5 @@
 from copy import deepcopy
-from utils import literals_from_body, verify_head_formating, verify_comma_placement, are_choice_atoms_equal, choice_literal_of_rule, unfold_choice_atom_to_ordered_string, parse_choice_atom
+from utils import literals_from_body, verify_head_formating, verify_comma_placement, are_choice_atoms_equal, choice_literal_of_rule, unfold_choice_atom_to_ordered_string, parse_choice_atom, clean_head, clean_body, clean_literal, clean_atom
 
 
 class Program:
@@ -64,14 +64,13 @@ class Rule:
             verify_comma_placement(rule_str)
         except SyntaxError as e:
             raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
-
+        
         if ":-" not in rule_str:
             head = rule_str[:-1].split("|")
-            self.head = list(map(str.strip, head))
             self.body = []
             try:
                 verify_head_formating(head)
-                self.head = list(map(str.strip, head))
+                self.head = clean_head(head)
             except SyntaxError as e:
                 raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
         else:
@@ -82,11 +81,12 @@ class Rule:
                 head = head.split("|")
                 try:
                     verify_head_formating(head)
-                    self.head = list(map(str.strip, head))
+                    self.head = clean_head(head)
                 except SyntaxError as e:
                     raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
             try:
-                self.body = literals_from_body(body)
+                body = literals_from_body(body)
+                self.body = clean_body(body)
             except SyntaxError as e:
                 raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
 
@@ -105,10 +105,10 @@ class Rule:
         return f"{' | '.join(self.head)} :- {', '.join(self.body)}."
 
     def add_literal(self, literal):
-        self.body.append(literal)
+        self.body.append(clean_literal(literal))
 
     def remove_literal(self, literal):
-        self.body.remove(literal)
+        self.body.remove(clean_literal(literal))
 
     def is_fact(self):
         return self.body == []
@@ -130,6 +130,7 @@ class Rule:
         return False
 
     def contains_atom(self, atom):
+        atom = clean_atom(atom)
         if atom in self.head:
             return True
         for literal in self.body:
@@ -161,7 +162,6 @@ class Rule:
             other_without_choice = deepcopy(other)
             other_without_choice.remove_literal(choice_literal_other)
             return self_without_choice == other_without_choice
-
         return sorted(self.head) == sorted(other.head) and sorted(self.body) == sorted(other.body)
 
     def __hash__(self):

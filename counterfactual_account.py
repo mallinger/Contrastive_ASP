@@ -6,7 +6,7 @@ from program import Rule, Program
 from utils import remove_meta_atoms
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(encoding='utf-8', level=logging.INFO)
+logging.basicConfig(encoding="utf-8", level=logging.INFO)
 
 
 def counterfactual_accounts(EF, CEP):
@@ -18,15 +18,19 @@ def counterfactual_accounts(EF, CEP):
     if F == [""]:
         raise ValueError("Foil must not be empty.")
 
-    if any( not P.contains_atom(e) for e in E):
-        raise ValueError("Explanandum does not appear in the program.")
+    for e in E:
+        if not P.contains_atom(e):
+            raise ValueError(f"Explanandum {e} does not appear in the program.")
 
-    if any(not P.contains_atom(f) for f in F):
-        raise ValueError("Foil does not appear in the program.")
+    for f in F:
+        if not P.contains_atom(f):
+            raise ValueError(f"Foil {f} does not appear in the program.")
 
     P_options = P - S
     assumptions = [
-        f"assumption({assumption})." for assumption in A if assumption not in I and assumption.strip() != ""
+        f"assumption({assumption})."
+        for assumption in A
+        if assumption not in I and assumption.strip() != ""
     ]
 
     logger.info("P: %s", P)
@@ -45,9 +49,12 @@ def counterfactual_accounts(EF, CEP):
         explanandum.append(f"explanandum({e}).")
 
     to_reify = Program(
-        " ".join([str(r) for r in P.rules]) + " "
-        + " ".join(assumptions) + " "
-        + " ".join(foil) + " "
+        " ".join([str(r) for r in P.rules])
+        + " "
+        + " ".join(assumptions)
+        + " "
+        + " ".join(foil)
+        + " "
         + " ".join(explanandum)
     )
 
@@ -57,29 +64,34 @@ def counterfactual_accounts(EF, CEP):
     reified = manual_reify(to_reify, S, meta_atoms)
 
     logger.debug("Original reified rules: %s\n", reified)
-    logger.info("Original reified rules translated: %s\n",
-                reified_to_original_rules(reified))
+    logger.info(
+        "Original reified rules translated: %s\n", reified_to_original_rules(reified)
+    )
 
     I_primes = solve_return_all_model_subset_heuristics(
-        [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal")
+        [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal"
+    )
 
     if I_primes == "UNSAT":
         raise ValueError("Impossible to derive the foil.")
     counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
-        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal")
+        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal"
+    )
 
     I_primes = remove_meta_atoms(I_primes)
     CA = []
     for i, I_prime in enumerate(I_primes):
         counterfactual_model = counterfactual_models_all_literals[i]
-        counterfactual_model_all_literals = ". ".join(
-            counterfactual_model) + "."
+        counterfactual_model_all_literals = ". ".join(counterfactual_model) + "."
         translated_counterfactual_rules = reified_to_original_rules(
-            Program(counterfactual_model_all_literals))
+            Program(counterfactual_model_all_literals)
+        )
 
         logger.info("I': %s", I_prime)
-        logger.debug("Counterfactual model with all literals: %s",
-                     counterfactual_model_all_literals)
+        logger.debug(
+            "Counterfactual model with all literals: %s",
+            counterfactual_model_all_literals,
+        )
         logger.info("Translated: %s", translated_counterfactual_rules)
 
         P_prime = P.intersection(translated_counterfactual_rules)

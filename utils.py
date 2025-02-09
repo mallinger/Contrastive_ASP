@@ -72,7 +72,7 @@ def literals_to_define(rules):
                 if "(" in literal:
                     literal = literal.split("(")[0]
                 to_define.append(literal + f"/{arity}")
-    return to_define
+    return list(set(to_define))
 
 
 def predicates_of_program(p):
@@ -101,12 +101,17 @@ def extract_choice_elements(choice_elements_str):
             choice_elements_dict[choice_element.strip()] = []
     return choice_elements_dict
 
+def choice_elements_around_index(rule, index):
+    start_index_of_choice = rule[:index].rindex("{") + 1
+    end_index_of_choice = rule[index:].index("}") + index
+    return extract_choice_elements(rule[start_index_of_choice: end_index_of_choice])
+
 def parse_choice_atom(choice_atom):
     choice_elements_str = choice_atom[choice_atom.index("{") + 1: choice_atom.index("}")]
     choice_elements = extract_choice_elements(choice_elements_str)
     relation_guard = choice_atom[choice_atom.index("}") + 1 :].strip()
     if relation_guard != "":
-        relation, guard,_ = re.split(r'(\d+)', relation_guard)
+        relation, guard, _ = re.split(r'(\d+)', relation_guard)
         return choice_elements, relation.strip(), int(guard)
     return choice_elements, "", ""
 
@@ -154,6 +159,50 @@ def unfold_choice_atom_to_ordered_string(atom):
 
     return result + relation + str(guard)
 
+def str_choice_atom_from_dict(choice_elements):
+    result = "{"
+    choice_element_strs = []
+    for head, choice_body in choice_elements.items():
+        choice_element_str = head 
+        if choice_body != []:
+            choice_element_str += " : " +",".join(choice_body)
+        choice_element_strs.append(choice_element_str)
+    result += "; ".join(choice_element_strs)
+    result += "}"
+    return result
+
+def clean_atom(atom):
+    atom = atom.replace(" ", "")
+    atom = re.sub(r'([,:;}])', r'\1 ', atom)
+    atom = atom.strip()
+    atom = atom.replace(">=", ">= ")
+    atom = atom.replace("<=", "<= ")
+    atom = atom.replace("!=", "!= ")
+    atom = atom.replace("==", "== ")
+    return re.sub(r'(?<![<>=])([<>])(?![=])', r'\1 ', atom)
+
+def clean_literal(literal):
+    negated = False
+    if "not " in literal:
+        negated = True
+        literal = literal.replace("not ", "")
+    literal = clean_atom(literal)
+    if negated:
+        literal = "not " + literal
+    return literal
+    
+def clean_head(head):
+    cleaned_head = []
+    for atom in head:
+        cleaned_head.append(clean_atom(atom))
+    return cleaned_head
+
+def clean_body(body):
+    cleaned_body = []
+    for literal in body:
+        cleaned_body.append(clean_literal(literal))
+    return cleaned_body    
+        
 relations = {
     "g" : " > ",
     "geq" : " >= ",
