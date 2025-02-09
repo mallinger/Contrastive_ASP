@@ -1,10 +1,10 @@
 from counterfactual_explanation import counterfactual_explanations
 
 
-def contrastive_explanations(explanation_frame, contrastive_explanation_problem):
+def contrastive_explanations(explanation_frame, contrastive_explanation_problem, number_of_counterfactual_accounts, number_of_explanations):
     (P, S, A) = explanation_frame
     try:
-        CFEs = counterfactual_explanations(explanation_frame, contrastive_explanation_problem)
+        CFEs = counterfactual_explanations(explanation_frame, contrastive_explanation_problem, number_of_counterfactual_accounts, number_of_explanations)
     except ValueError as error:
         raise error
     CEs = []

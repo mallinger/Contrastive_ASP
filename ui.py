@@ -1,7 +1,7 @@
 import sys
 import json
 from PySide6.QtWidgets import QFormLayout, QScrollArea, QCompleter, QMessageBox, QFileDialog, QApplication, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QLineEdit, QTextEdit, QMenu
-from PySide6.QtGui import QTextCharFormat, QColor
+from PySide6.QtGui import QTextCharFormat, QColor, QIntValidator
 from PySide6.QtCore import Qt
 
 from contrastive_explanation import contrastive_explanations
@@ -30,6 +30,9 @@ class Window(QWidget):
         self.S = Program("")
         self.selected_rules_dict = {}
         self.predicates = []
+        
+        number_validator = QIntValidator()
+        number_validator.setRange(1, 100)
 
         # left elements
         program_label = QLabel(text="Program:")
@@ -108,6 +111,25 @@ class Window(QWidget):
         self.interpretation_edit = QTextEdit()
 
         # right elements
+        self.number_of_CA_label = QLabel(text="Number of Counterfactual Accounts:")
+        self.number_of_CA_label.setStyleSheet(LABEL_STYLE)
+        self.number_of_CA_edit = QLineEdit()
+        self.number_of_CA_edit.setValidator(number_validator)
+        self.number_of_CA_edit.setText("1")
+        number_of_CA_layout = QHBoxLayout()
+        number_of_CA_layout.addWidget(self.number_of_CA_label)
+        number_of_CA_layout.addWidget(self.number_of_CA_edit)
+        
+        
+        self.number_of_explanations_label = QLabel(text="Number of Explanations per Account:")
+        self.number_of_explanations_label.setStyleSheet(LABEL_STYLE)
+        self.number_of_explanations_edit = QLineEdit()
+        self.number_of_explanations_edit.setValidator(number_validator)
+        self.number_of_explanations_edit.setText("1")
+        number_of_explanation_layout = QHBoxLayout()
+        number_of_explanation_layout.addWidget(self.number_of_explanations_label)
+        number_of_explanation_layout.addWidget(self.number_of_explanations_edit)
+        
         start_button = QPushButton(text="Go!")
         start_button.setStyleSheet(LABEL_STYLE)
         start_button.clicked.connect(self.go)
@@ -141,6 +163,8 @@ class Window(QWidget):
         middle_box.addWidget(self.interpretation_edit)
         middle_box.addStretch()
 
+        right_box.addLayout(number_of_CA_layout)
+        right_box.addLayout(number_of_explanation_layout)
         right_box.addWidget(start_button)
         right_box.addWidget(result_label)
         right_box.addWidget(self.result_edit)
@@ -170,6 +194,9 @@ class Window(QWidget):
         E = list(map(str.strip, E))
         F = self.foil_edit.text().split(",")
         F = list(map(str.strip, F))
+        
+        number_of_counterfactual_accounts = int(self.number_of_CA_edit.text())
+        number_of_explanations = int(self.number_of_explanations_edit.text())
         print(f"""Go called with program:{P}
               S: {S}
               Assumptions: {A}
@@ -185,7 +212,7 @@ class Window(QWidget):
             return
         try:
             CEs = contrastive_explanations(
-                (program, Program(S), A), (I, E, F))
+                (program, Program(S), A), (I, E, F), number_of_counterfactual_accounts, number_of_explanations)
             CEs_str = list(map(str, CEs))
             self.result_edit.setText("\n\n".join(CEs_str))
         except ValueError as error:

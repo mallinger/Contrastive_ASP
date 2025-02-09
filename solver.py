@@ -18,13 +18,13 @@ def solve_return_model(programs):
     return "UNSAT"
 
 
-def solve_return_all_models(programs, subset_heuristic=False):
+def solve_return_all_models(programs, n, subset_heuristic=False):
     if subset_heuristic:
         ctl = clingo.Control(
             ["--opt-mode=optN", "--heuristic=Domain", "--dom-mod=5,16",  "--enum-mod=domRec"])
     else:
         ctl = clingo.Control(["--opt-mode=optN"])
-    ctl.configuration.solve.models = 0
+    ctl.configuration.solve.models = n
     for program in programs:
         ctl.add("base", [], program)
     ctl.ground([("base", [])])
@@ -43,11 +43,11 @@ def solve_return_all_models(programs, subset_heuristic=False):
     return "UNSAT"
 
 
-def solve_return_all_model_subset_heuristics(programs, heuristic):
+def solve_return_all_model_subset_heuristics(programs, heuristic, n):
     if heuristic == "subset-minimal":
         programs.append("#heuristic rule(_,_). [1, false]")
-        return solve_return_all_models(programs, True)
+        return solve_return_all_models(programs, n, True)
     else:
         programs.append("#heuristic rule(_,_). [1, true]")
-        return solve_return_all_models(programs, True)
+        return solve_return_all_models(programs, n, True)
     

@@ -5,7 +5,7 @@ from solver import solve_return_all_models
 from program import Program, Rule
 
 
-def find_minimal_programs_to_derive(P, goals, P_prime):
+def find_minimal_programs_to_derive(P, goals, P_prime, number_of_explanations):
     to_define = literals_to_define(P.rules)
     actives_dict = {}
     rules_dict = {}
@@ -35,7 +35,7 @@ def find_minimal_programs_to_derive(P, goals, P_prime):
     )
     if P_prime is not None:
         to_solve += ":~ X = #count{N : active_P_prime(N) }. [X@2] "
-    results = solve_return_all_models([to_solve])
+    results = solve_return_all_models([to_solve], number_of_explanations)
     programs = []
     for result in results:
         actives_chosen = [e for e in result if e.startswith("active")]
@@ -43,21 +43,21 @@ def find_minimal_programs_to_derive(P, goals, P_prime):
     return programs
 
 
-def counterfactual_explanations(explanation_frame, contrastive_explanation_problem):
+def counterfactual_explanations(explanation_frame, contrastive_explanation_problem, number_of_counterfactual_accounts, number_of_explanations):
     (P, S, A) = explanation_frame
     (I, E, F) = contrastive_explanation_problem
     try:
-        CAs = counterfactual_accounts(explanation_frame, contrastive_explanation_problem)
+        CAs = counterfactual_accounts(explanation_frame, contrastive_explanation_problem, number_of_counterfactual_accounts)
     except ValueError as error:
         raise error
     CFEs = []
 
     for P_prime, I_prime, A_prime in CAs:
-        Q1s = find_minimal_programs_to_derive(P, E, P_prime)
+        Q1s = find_minimal_programs_to_derive(P, E, P_prime, number_of_explanations)
         A_prime_program = Program(set([Rule(f"{a}.") for a in A_prime]))
-        Q2s = find_minimal_programs_to_derive(P_prime + A_prime_program, F, None)
+        Q2s = find_minimal_programs_to_derive(P_prime + A_prime_program, F, None, number_of_explanations)
         Q_delta = P - P_prime
         for Q1 in set(Q1s):
             for Q2 in set(Q2s):
                 CFEs.append((Q1, Q2, Q_delta))
-    return set(CFEs)
+    return set(CFEs[:number_of_explanations])

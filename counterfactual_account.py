@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(encoding="utf-8", level=logging.INFO)
 
 
-def counterfactual_accounts(EF, CEP):
+def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
     (P, S, A) = EF
     (I, E, F) = CEP
 
@@ -69,13 +69,13 @@ def counterfactual_accounts(EF, CEP):
     )
 
     I_primes = solve_return_all_model_subset_heuristics(
-        [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal"
+        [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal", number_of_counterfactual_accounts
     )
 
     if I_primes == "UNSAT":
         raise ValueError("Impossible to derive the foil.")
     counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
-        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal"
+        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal", number_of_counterfactual_accounts
     )
 
     I_primes = remove_meta_atoms(I_primes)
