@@ -1,6 +1,6 @@
 from copy import deepcopy
 from utils import literals_from_body, verify_head_formating, verify_comma_placement, are_choice_atoms_equal, choice_literal_of_rule, unfold_choice_atom_to_ordered_string, parse_choice_atom, clean_head, clean_body, clean_literal, clean_atom
-
+import re
 
 class Program:
 
@@ -10,7 +10,7 @@ class Program:
                 raise SyntaxError("Program does not end with '.'")
             prg = prg.strip()
             self.rules = set([Rule(f"{rule.lstrip()}.")
-                             for rule in prg[:-1].split(". ") if rule.strip() != ""])
+                             for rule in re.split(r"\.\s+", prg[:-1]) if rule.strip() != ""])
         elif isinstance(prg, set) and all(isinstance(r, Rule) for r in prg):
             self.rules = prg
         else:

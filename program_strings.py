@@ -15,7 +15,7 @@ body(sum(B,G))  :- rule(_,sum(B,G)),
 { hold(A) : atom_tuple(H,A) } :- rule(     choice(H),B), body(B).
 
 #show.
-#show T : output(T,B), hold(B).
+#show T : output(T,B), conjunction(B).
 """
 
 META_STR_ALL_LITERALS = """

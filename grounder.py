@@ -41,7 +41,7 @@ def range_info(atom):
 
 def expand_range(program_string):
     result_string = ""
-    for rule in program_string[:-1].split(". "):
+    for rule in re.split(r"\.\s+", program_string[:-1]):
         if ".." in rule:
             limits = re.search(REGEX_RANGE, rule)
             start, end = int(limits.group(1)), int(limits.group(2))
@@ -117,16 +117,27 @@ def parse_arithmetic(grounded_rules):
         valid = True
         for literal in rule.body:
             if "{" not in literal:
-                for rel in ["<", "<=", ">", ">=", "!=", "==", "="]:
+                for rel in ["<=", ">=", "!=", "==", "<", ">","="]:
                     if rel in literal:
                         left, right = literal.split(rel)
                         if not re.search("[a-zA-Z]", left) and not re.search(
                             "[a-zA-Z]", right
                         ):
-                            if eval(f"{int(eval(left))}{rel}{int(eval(right))}"):
+                            if "," in left:
+                                if rel == "==" and left.strip() == right.strip():
+                                    rule_to_add.remove_literal(literal)
+                                elif rel == "!=" and left.strip() != right.strip():
+                                    rule_to_add.remove_literal(literal)
+                                else:
+                                    valid = False
+                                break
+                            elif eval(f"{int(eval(left))}{rel}{int(eval(right))}"):
                                 rule_to_add.remove_literal(literal)
                             else:
                                 valid = False
+                            break
+                        else:
+                            valid = False
                             break
 
         for atom in rule.head:
@@ -155,23 +166,24 @@ def global_variables(rule):
 
 def replace_global_variables(program_string, constants):
     program_string_no_globals = ""
-    for rule in program_string[:-1].split(". "):
+    for rule in re.split(r"\.\s+", program_string[:-1]):
         rule = rule.strip()
         variables = global_variables(rule)
         if not variables:
-            program_string_no_globals += f"{rule}."
+            program_string_no_globals += f"{rule}. "
             continue
         for c in list(product(constants, repeat=len(variables))):
             grounded_rule = rule
             for i, v in enumerate(variables):
                 grounded_rule = re.sub(REGEX_SUBSTITUTION(v), c[i], grounded_rule)
-            program_string_no_globals += f"{grounded_rule}."
+            program_string_no_globals += f"{grounded_rule}. "
     return program_string_no_globals
 
 
 def replace_local_variables(program_string, constants):
     grounded_rules = Program("")
-    for rule in program_string[:-1].split("."):
+    program_string = program_string.strip()
+    for rule in re.split(r"\.\s+", program_string[:-1]):
         rule = rule.strip()
         limits = re.search(REGEX_VARIABLES, rule)
         if not limits:
@@ -202,9 +214,29 @@ def replace_local_variables(program_string, constants):
 
     return grounded_rules
 
+def constants_of_program(program_string):
+    constants = []
+    for rule in re.split(r"\.\s+", program_string[:-1]):
+        if ":-" not in rule:
+            head_atoms = rule.split("|")
+            for head_atom in head_atoms:
+                constants.extend(constants_from_atom(head_atom))
+            continue
+        head, body = rule.split(":-")
+        head_atoms = head.split("|")
+        for head_atom in head_atoms:
+            constants.extend(constants_from_atom(head_atom))
+        for literal in literals_from_body(body):
+            constants.extend(constants_from_atom(literal))
+    return list(set(constants))
 
-def ground(program_string):
+
+
+def ground(program_string, constants=None):
     program_string = program_string.strip()
+
+    if any(aggregate in program_string for aggregate in ["#sum", "#count", "#max", "#min"]):
+        raise NotImplementedError("Aggregates are not supported in this grounder.")
 
     if (
         re.search(r"(?<!\d)\.\.", program_string) is not None
@@ -218,20 +250,9 @@ def ground(program_string):
         Program(program_string)
     except SyntaxError as s:
         raise SyntaxError(f"Can not ground program due to syntax error: {s}") from s
-    constants = []
-    for rule in program_string[:-1].split(". "):
-        if ":-" not in rule:
-            head_atoms = rule.split("|")
-            for head_atom in head_atoms:
-                constants.extend(constants_from_atom(head_atom))
-            continue
-        head, body = rule.split(":-")
-        head_atoms = head.split("|")
-        for head_atom in head_atoms:
-            constants.extend(constants_from_atom(head_atom))
-        for literal in literals_from_body(body):
-            constants.extend(constants_from_atom(literal))
-    constants = list(set(constants))
+    
+    if constants == None:
+        constants = constants_of_program(program_string)
 
     program_string = replace_global_variables(program_string, constants)
     grounded_rules = replace_local_variables(program_string, constants)

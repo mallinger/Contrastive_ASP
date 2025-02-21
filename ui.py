@@ -1,12 +1,13 @@
 import sys
 import json
+import re
 from PySide6.QtWidgets import QFormLayout, QScrollArea, QCompleter, QMessageBox, QFileDialog, QApplication, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QLineEdit, QTextEdit, QMenu
 from PySide6.QtGui import QTextCharFormat, QColor, QIntValidator
 from PySide6.QtCore import Qt
 
 from contrastive_explanation import contrastive_explanations
 
-from grounder import ground
+from grounder import ground, constants_of_program
 from program import Program, Rule
 from utils import predicates_of_program
 
@@ -211,8 +212,9 @@ class Window(QWidget):
             self.foil_label.setStyleSheet(LABEL_STYLE_RED)
             return
         try:
+            constants = constants_of_program(P)
             CEs = contrastive_explanations(
-                (program, Program(S), A), (I, E, F), number_of_counterfactual_accounts, number_of_explanations)
+                (program, ground(S, constants), A), (I, E, F), number_of_counterfactual_accounts, number_of_explanations)
             CEs_str = list(map(str, CEs))
             self.result_edit.setText("\n\n".join(CEs_str))
         except ValueError as error:
@@ -256,7 +258,7 @@ class Window(QWidget):
         with open(path_to_file, 'r', encoding='utf-8') as file:
             program_str = file.read().strip().replace("\n", " ")
             faulty_rules = []
-            for rule in program_str[:-1].split(". "):
+            for rule in re.split(r"\.\s+", program_str[:-1]):
                 try:
                     r = Rule(f"{rule}.")
                     self.program.add_rule(r)
