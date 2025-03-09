@@ -1,7 +1,7 @@
 import logging
 from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS
 from reification import manual_reify, reified_to_original_rules
-from solver import solve_return_all_model_subset_heuristics
+from solver import solve_return_all_subset_maximal_models
 from program import Rule, Program
 from utils import remove_meta_atoms, remove_reification_atoms
 
@@ -59,23 +59,23 @@ def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
     )
 
     # reify
-    logger.info("Original Program to reify: %s", to_reify)
+    logger.debug("Original Program to reify: %s", to_reify)
     meta_atoms = [Rule(r) for r in assumptions + foil + explanandum]
     reified = manual_reify(to_reify, S, meta_atoms)
 
     logger.debug("Original reified rules: %s\n", reified)
-    logger.info(
+    logger.debug(
         "Original reified rules translated: %s\n", reified_to_original_rules(reified)
     )
 
-    I_primes = solve_return_all_model_subset_heuristics(
-        [str(reified), META_STR, COUNTERFACTUAL_STR], "subset-maximal", number_of_counterfactual_accounts
+    I_primes = solve_return_all_subset_maximal_models(
+        [str(reified), META_STR, COUNTERFACTUAL_STR], number_of_counterfactual_accounts
     )
 
     if I_primes == "UNSAT":
         raise ValueError("Impossible to derive the foil.")
-    counterfactual_models_all_literals = solve_return_all_model_subset_heuristics(
-        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], "subset-maximal", number_of_counterfactual_accounts
+    counterfactual_models_all_literals = solve_return_all_subset_maximal_models(
+        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], number_of_counterfactual_accounts
     )
 
     I_primes = remove_meta_atoms(I_primes)
@@ -88,12 +88,12 @@ def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
             Program(counterfactual_model_all_literals)
         )
 
-        logger.info("I': %s", I_prime)
+        logger.debug("I': %s", I_prime)
         logger.debug(
             "Counterfactual model with all literals: %s",
             counterfactual_model_all_literals,
         )
-        logger.info("Translated: %s", translated_counterfactual_rules)
+        logger.debug("Translated: %s", translated_counterfactual_rules)
 
         P_prime = P.intersection(translated_counterfactual_rules)
         A_prime = set(A).intersection(I_prime)

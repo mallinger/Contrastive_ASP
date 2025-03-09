@@ -1,6 +1,6 @@
 from grounder import ground
 from program import Program
-
+from math import sqrt
 
 def ex0():
     prg = """crow :- bird, darkwings. bird :- feathers, beak, shape. magpie :- bird, whitewings. beak. shape. feathers. darkwings."""
@@ -137,3 +137,30 @@ def ex_coloring(n):
     F = ["g(3)"]
     return ((P, S, A), (I, E, F))
 
+
+def ex_sudoku(n):
+    sudo = f"""
+    x(1..{n}). 
+    y(1..{n}). 
+    n(1..{n}). 
+    :- sudoku(X,Y,N), sudoku(A,Y,N), X != A. 
+    :- sudoku(X,Y,N), sudoku(X,B,N), Y != B. 
+    """
+    sudo += " | ".join([f"sudoku(X,Y,{N})" for N in range(1, n + 1)]) + ":- x(X), y(Y)."
+
+    subgrids = ""
+    for x in range(1,n + 1):
+        for y in range(1, n + 1):
+            for a in range(1, n + 1):
+                for b in range(1, n + 1):
+                    if int((x-1)/sqrt(n)) == int((a-1)/sqrt(n)) and int((y-1)/sqrt(n)) == int((b-1)/sqrt(n)) and x != a and y != b:
+                        for v in range(1, n + 1):
+                            subgrids += f" :- sudoku({x},{y},{v}), sudoku({a},{b},{v})."
+    sudo += " " + subgrids
+    P = ground(sudo + " sudoku(1,1,1). sudoku(1,2,2).")
+    S = ground(sudo)
+    A = []
+    I = ["sudoku(1,1,1)", "sudoku(1,2,2)"]
+    E = ["sudoku(1,2,2)"]
+    F = ["sudoku(1,2,1)"]
+    return ((P, S, A), (I, E, F))

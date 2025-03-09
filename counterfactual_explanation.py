@@ -1,7 +1,7 @@
 import copy
 from counterfactual_account import counterfactual_accounts
 from utils import literals_to_define
-from solver import solve_return_all_models
+from solver import solve_return_all_subset_minimal_models
 from program import Program, Rule
 
 
@@ -30,12 +30,9 @@ def find_minimal_programs_to_derive(P, goals, P_prime, number_of_explanations):
         " ".join([f"#defined {atom}." for atom in to_define])
         + " ".join([str(s) for s in actives_dict.values()])
         + " ".join(f":- not {g}. " for g in goals)
-        + ":~ X = #count{N : active(N) }. [X@1] "
         + " ".join([f"{{{a}}}." for a in actives_dict])
     )
-    if P_prime is not None:
-        to_solve += ":~ X = #count{N : active_P_prime(N) }. [X@2] "
-    results = solve_return_all_models([to_solve], number_of_explanations)
+    results = solve_return_all_subset_minimal_models([to_solve], number_of_explanations)
     programs = []
     for result in results:
         actives_chosen = [e for e in result if e.startswith("active")]

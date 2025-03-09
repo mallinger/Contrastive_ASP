@@ -21,6 +21,7 @@ def add_reified_literal(literal, atoms, rule_index, reified, amount_of_rules):
     if literal not in atoms:
         atoms[literal] = amount_of_rules + len(atoms) + 1
     current_atom_index = atoms[literal]
+    reified.add_rule(f"literal_tuple({current_atom_index}).")
     reified.add_rule(
             f"literal_tuple({current_atom_index}, {current_atom_index}).")
     reified.add_rule(
