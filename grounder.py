@@ -110,39 +110,47 @@ def constants_from_atom(atom):
         return re.findall(REGEX_CONSTANTS, atom)
     return []
 
-def parse_arithmetic(grounded_rules):
-    grounded_rules_parsed = Program("")
-    for rule in grounded_rules.rules:
+def check_arithmetic_in_literal(literal, rel):
+    left, right = literal.split(rel)
+    if not re.search("[a-zA-Z]", left) and not re.search("[a-zA-Z]", right):
+        if "," in left:
+            if rel == "==" and left.strip() == right.strip():
+                return True
+            elif rel == "!=" and left.strip() != right.strip():
+                return True
+            else:
+                return False
+        elif eval(f"{int(eval(left))}{rel}{int(eval(right))}"):
+            return True
+        else:
+            return False
+    else:
+        if rel == "==":
+            return left.strip() == right.strip()
+        if rel == "!=":
+            return left.strip() != right.strip()
+    return False
+
+
+def parse_arithmetic(grounded_program):
+    grounded_program_parsed = Program("")
+    for rule in grounded_program.rules:
         rule_to_add = Rule(str(rule))
         valid = True
         for literal in rule.body:
             if "{" not in literal:
-                for rel in ["<=", ">=", "!=", "==", "<", ">","="]:
+                for rel in ["<=", ">=", "!=", "==", "<", ">"]:
                     if rel in literal:
-                        left, right = literal.split(rel)
-                        if not re.search("[a-zA-Z]", left) and not re.search(
-                            "[a-zA-Z]", right
-                        ):
-                            if "," in left:
-                                if rel == "==" and left.strip() == right.strip():
-                                    rule_to_add.remove_literal(literal)
-                                elif rel == "!=" and left.strip() != right.strip():
-                                    rule_to_add.remove_literal(literal)
-                                else:
-                                    valid = False
-                                break
-                            elif eval(f"{int(eval(left))}{rel}{int(eval(right))}"):
-                                rule_to_add.remove_literal(literal)
-                            else:
-                                valid = False
-                            break
+                        valid_literal = check_arithmetic_in_literal(literal, rel)
+                        if valid_literal:
+                            rule_to_add.remove_literal(literal)
                         else:
                             valid = False
                             break
 
         for atom in rule.head:
             if "{" not in atom:
-                for rel in ["<", "<=", ">", ">=", "!=", "==", "="]:
+                for rel in ["<", "<=", ">", ">=", "!=", "=="]:
                     if rel in atom:
                         left, right = atom.split(rel)
                         if not re.search("[a-zA-Z]", left) and not re.search(
@@ -154,8 +162,8 @@ def parse_arithmetic(grounded_rules):
                                 rule_to_add.head = [h for h in rule_to_add.head if h != atom]
                             break
         if valid:
-            grounded_rules_parsed.add_rule(rule_to_add)
-    return grounded_rules_parsed
+            grounded_program_parsed.add_rule(rule_to_add)
+    return grounded_program_parsed
 
 
 def global_variables(rule):
@@ -255,5 +263,5 @@ def ground(program_string, constants=None):
         constants = constants_of_program(program_string)
 
     program_string = replace_global_variables(program_string, constants)
-    grounded_rules = replace_local_variables(program_string, constants)
-    return parse_arithmetic(grounded_rules)
+    grounded_program = replace_local_variables(program_string, constants)
+    return parse_arithmetic(grounded_program)
