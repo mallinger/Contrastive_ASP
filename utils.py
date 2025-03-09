@@ -90,6 +90,13 @@ def remove_meta_atoms(atoms_list):
         result.append([atom for atom in atoms if not any (atom.startswith(m) for m in meta_predicates)])
     return result
 
+def remove_reification_atoms(atoms_list):
+    reification_predicates = ["choice_info", "helper"]
+    result = []
+    for atoms in atoms_list:
+        result.append([atom for atom in atoms if not any (atom.startswith(m) for m in reification_predicates)])
+    return result
+
 def extract_choice_elements(choice_elements_str):
     choice_elements = choice_elements_str.split(";")
     choice_elements_dict = {}

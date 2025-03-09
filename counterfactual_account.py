@@ -3,7 +3,7 @@ from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS
 from reification import manual_reify, reified_to_original_rules
 from solver import solve_return_all_model_subset_heuristics
 from program import Rule, Program
-from utils import remove_meta_atoms
+from utils import remove_meta_atoms, remove_reification_atoms
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(encoding="utf-8", level=logging.INFO)
@@ -79,6 +79,7 @@ def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
     )
 
     I_primes = remove_meta_atoms(I_primes)
+    I_primes = remove_reification_atoms(I_primes)
     CA = []
     for i, I_prime in enumerate(I_primes):
         counterfactual_model = counterfactual_models_all_literals[i]
