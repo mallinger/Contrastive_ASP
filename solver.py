@@ -3,6 +3,7 @@ import clingo
 
 def solve_return_model(programs):
     ctl = clingo.Control()
+    ctl.configuration.solve.models = 1
     for program in programs:
         ctl.add("base", [], program)
     ctl.ground([("base", [])])
@@ -43,11 +44,12 @@ def solve_return_all_models(programs, n, subset_heuristic=False):
     return "UNSAT"
 
 
-def solve_return_all_model_subset_heuristics(programs, heuristic, n):
-    if heuristic == "subset-minimal":
-        programs.append("#heuristic rule(_,_). [1, false]")
-        return solve_return_all_models(programs, n, True)
-    else:
-        programs.append("#heuristic rule(_,_). [1, true]")
-        return solve_return_all_models(programs, n, True)
+def solve_return_all_subset_maximal_models(programs, n):
+    programs.append("#heuristic rule(_,_). [1, true]")
+    return solve_return_all_models(programs, n, True)
+
+def solve_return_all_subset_minimal_models(programs, n):
+    programs.append("#heuristic active_P_prime(_). [1, false]")
+    programs.append("#heuristic active(_). [1, false]")
+    return solve_return_all_models(programs, n, True)
     
