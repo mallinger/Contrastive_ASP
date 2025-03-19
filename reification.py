@@ -124,7 +124,6 @@ def add_reified_helper_b_rule(atoms, rule_index, reified, amount_of_rules, choic
 
 def manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules):
     choice_elements, relation, guard = parse_choice_atom(rule.head[0])
-    guard = int(guard)
     for atom in choice_elements:
         add_reified_atom(atom, atoms, rule_index, reified, amount_of_rules)
 
@@ -137,8 +136,10 @@ def manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules):
     # rule for choice information
     reified.add_rule(f"rule(disjunction(f{rule_index}), normal(f{rule_index})).")
     if relation != "":
+        guard = int(guard)
         manual_reify_rule(Rule(f"choice_info({rule_index}, {relations_rev[relation]}, {guard})."), atoms, f"f{rule_index}", reified, amount_of_rules)
     else:
+        guard = 0
         manual_reify_rule(Rule(f"choice_info({rule_index})."), atoms, f"f{rule_index}", reified, amount_of_rules)
 
     if ">" == relation:

@@ -114,7 +114,7 @@ def choice_elements_around_index(rule, index):
     return extract_choice_elements(rule[start_index_of_choice: end_index_of_choice])
 
 def relation_of_atom(atom):
-    for rel in ["<=", ">=", "!=", "==", "<", ">"]:
+    for rel in ["<=", ">=", "!=", "==", "<", ">", "="]:
         if rel in atom:
             return rel
 
@@ -230,5 +230,6 @@ relations_rev = {
     "<" : "l",
     "<=" : "leq",
     "=" : "eq",
+    "==" : "eq",
     "" : ""
 }

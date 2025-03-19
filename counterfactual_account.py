@@ -33,10 +33,10 @@ def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
         if assumption not in I and assumption.strip() != ""
     ]
 
-    logger.info("P: %s", P)
-    logger.info("A: %s", A)
-    logger.info("S: %s", S)
-    logger.info("P_options: %s", P_options)
+    logger.debug("P: %s", P)
+    logger.debug("A: %s", A)
+    logger.debug("S: %s", S)
+    logger.debug("P_options: %s", P_options)
     logger.info("Explanandum: %s", E)
     logger.info("Foil: %s", F)
 

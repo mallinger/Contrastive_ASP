@@ -264,6 +264,13 @@ class Window(QWidget):
                     self.program.add_rule(r)
                 except SyntaxError:
                     faulty_rules.append(rule)
+                except Exception:
+                    msg = QMessageBox()
+                    msg.setText("Error while parsing input program")
+                    msg.setInformativeText("""The input program does not have a valid ASP format.""")
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.exec()
+                    return
 
             self.program_edit.setText(str(self.program).replace(". ", ".\n"))
 
@@ -301,11 +308,19 @@ class Window(QWidget):
         if path_to_file == '':
             return
         with open(path_to_file, 'r', encoding='utf-8') as file:
-            config = json.load(file)
+            try:
+                config = json.load(file)
+            except Exception:
+                msg = QMessageBox()
+                msg.setText("Error while reading json")
+                msg.setInformativeText("The input file is not a valid json file.")
+                msg.setIcon(QMessageBox.Critical)
+                msg.exec()
+                return
             
         if any(name not in config for name in ["S","A","I","E","F"]):
             msg = QMessageBox()
-            msg.setText("Error")
+            msg.setText("Error invalid format")
             msg.setInformativeText("""The names of the json file are incorrect.\nThe following names need to be included:\nS, A, I, E, F""")
             msg.setIcon(QMessageBox.Critical)
             msg.exec()
