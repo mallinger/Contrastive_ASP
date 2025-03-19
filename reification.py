@@ -62,6 +62,7 @@ def manual_reify_rule(rule, atoms, rule_index, reified, amount_of_rules):
 def manual_reify_choice_body(rule, atoms, rule_index, reified, amount_of_rules):
     choice_atom = choice_literal_of_rule(rule.body)
     choice_elements, relation, guard = parse_choice_atom(choice_atom)
+    guard = int(guard)
     for choice_element_key in choice_elements:
         add_reified_weighted_literal(choice_element_key, atoms, f"l{rule_index}", reified, amount_of_rules)
 
@@ -123,6 +124,7 @@ def add_reified_helper_b_rule(atoms, rule_index, reified, amount_of_rules, choic
 
 def manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules):
     choice_elements, relation, guard = parse_choice_atom(rule.head[0])
+    guard = int(guard)
     for atom in choice_elements:
         add_reified_atom(atom, atoms, rule_index, reified, amount_of_rules)
 

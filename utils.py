@@ -113,13 +113,18 @@ def choice_elements_around_index(rule, index):
     end_index_of_choice = rule[index:].index("}") + index
     return extract_choice_elements(rule[start_index_of_choice: end_index_of_choice])
 
+def relation_of_atom(atom):
+    for rel in ["<=", ">=", "!=", "==", "<", ">"]:
+        if rel in atom:
+            return rel
+
 def parse_choice_atom(choice_atom):
     choice_elements_str = choice_atom[choice_atom.index("{") + 1: choice_atom.index("}")]
     choice_elements = extract_choice_elements(choice_elements_str)
     relation_guard = choice_atom[choice_atom.index("}") + 1 :].strip()
     if relation_guard != "":
-        relation, guard, _ = re.split(r'(\d+)', relation_guard)
-        return choice_elements, relation.strip(), int(guard)
+        relation = relation_of_atom(relation_guard)
+        return choice_elements, relation, relation_guard.replace(relation, "").strip()
     return choice_elements, "", ""
 
 def range_inside_choice(rule, start_index):

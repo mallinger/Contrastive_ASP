@@ -7,6 +7,7 @@ from utils import (
     start_index_of_predicate,
     choice_elements_around_index,
     str_choice_atom_from_dict,
+    relation_of_atom
 )
 from program import Program, Rule
 
@@ -92,7 +93,7 @@ def expand_range(program_string):
 
 def constants_from_choice_atom(atom):
     choice_elements, _, guard = parse_choice_atom(atom)
-    constants = [str(guard)] if guard != "" else []
+    constants = re.findall(REGEX_CONSTANTS, guard)
     for head_atom, literals in choice_elements.items():
         if "(" in head_atom:
             constants.extend(re.findall(REGEX_CONSTANTS, head_atom))
@@ -129,8 +130,13 @@ def check_arithmetic_in_literal(literal, rel):
             return left.strip() == right.strip()
         if rel == "!=":
             return left.strip() != right.strip()
+        else:
+            raise SyntaxError(f"Can not compare names \"{left.strip()}\" and \"{right.strip()}\" with relation \"{rel}\"")
     return False
 
+def parse_arithmetic_guard(choice_atom):
+    _, relation, guard = parse_choice_atom(choice_atom)
+    return choice_atom[0 : choice_atom.index(relation) + len(relation) +1] + str(int(eval(guard)))
 
 def parse_arithmetic(grounded_program):
     grounded_program_parsed = Program("")
@@ -139,28 +145,40 @@ def parse_arithmetic(grounded_program):
         valid = True
         for literal in rule.body:
             if "{" not in literal:
-                for rel in ["<=", ">=", "!=", "==", "<", ">"]:
-                    if rel in literal:
-                        valid_literal = check_arithmetic_in_literal(literal, rel)
-                        if valid_literal:
-                            rule_to_add.remove_literal(literal)
-                        else:
-                            valid = False
-                            break
+                relation = relation_of_atom(literal)
+                if relation != None:        
+                    valid_literal = check_arithmetic_in_literal(literal, relation)
+                    if valid_literal:
+                        rule_to_add.remove_literal(literal)
+                    else:
+                        valid = False
+                        break
+            else:
+                relation = relation_of_atom(literal)
+                if relation != None:
+                    rule_to_add.remove_literal(literal)
+                    rule_to_add.add_literal(parse_arithmetic_guard(literal))
+                    break
 
         for atom in rule.head:
             if "{" not in atom:
-                for rel in ["<", "<=", ">", ">=", "!=", "=="]:
-                    if rel in atom:
-                        left, right = atom.split(rel)
-                        if not re.search("[a-zA-Z]", left) and not re.search(
-                            "[a-zA-Z]", right
-                        ):
-                            if eval(f"{int(eval(left))}{rel}{int(eval(right))}"):
-                                valid = False
-                            else:
-                                rule_to_add.head = [h for h in rule_to_add.head if h != atom]
-                            break
+                relation = relation_of_atom(atom) 
+                if relation != None:        
+                    left, right = atom.split(rel)
+                    if not re.search("[a-zA-Z]", left) and not re.search(
+                        "[a-zA-Z]", right
+                    ):
+                        if eval(f"{int(eval(left))}{rel}{int(eval(right))}"):
+                            valid = False
+                        else:
+                            rule_to_add.head = [h for h in rule_to_add.head if h != atom]
+                        break
+            else:
+                relation = relation_of_atom(atom)
+                if relation != None:
+                    rule_to_add.head = [h for h in rule_to_add.head if h != atom]
+                    rule_to_add.head.append(parse_arithmetic_guard(atom))
+                    break
         if valid:
             grounded_program_parsed.add_rule(rule_to_add)
     return grounded_program_parsed
