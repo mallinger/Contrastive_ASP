@@ -221,8 +221,8 @@ def parse_arithmetic_equations(grounded_program):
     return grounded_program_parsed
 
 def parse_arithmetic(grounded_program):
-    grounded_program =  parse_arithmetic_expressions(grounded_program)
-    return parse_arithmetic_equations(grounded_program)
+    grounded_program = parse_arithmetic_equations(grounded_program)
+    return parse_arithmetic_expressions(grounded_program) 
 
 def replace_variables(program_string, constants):
     grounded_program = Program("")

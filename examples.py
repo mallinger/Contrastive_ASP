@@ -99,7 +99,7 @@ def ex6():
 
 
 def ex_nqueens(n):
-    prg = f"""{{ queen(1..{n}, 1..{n}) }} = {n}. 
+    prg = f"""{{ queen(1..{n}, 1..{n}) }} == {n}. 
     :- queen(I,J), queen(I,JJ), J != JJ. 
     :- queen(I,J), queen(II,J), I != II. 
     :- queen(I,J), queen(II,JJ), (I,J) != (II,JJ), I-J == II-JJ. 
@@ -116,29 +116,58 @@ def ex_nqueens(n):
     
     
 def ex_coloring(n):
-    prg = """b(X) | r(X) | g(X) :- node(X). 
-        :- b(X), b(Y), edge(X, Y). 
-        :- g(X), g(Y), edge(X, Y). 
-        :- r(X), r(Y), edge(X, Y). """
+    prg_rules = """b(X) | r(X) | g(X) | y(X) | t(X) :- node(X). 
+    :- b(X), b(Y), link(X, Y). 
+    :- g(X), g(Y), link(X, Y). 
+    :- y(X), y(Y), link(X, Y). 
+    :- t(X), t(Y), link(X, Y). 
+    :- r(X), r(Y), link(X, Y).
+     """
     
-    prg_facts = "" 
-    for i in range(1, n + 1):
-        prg_facts += f"node({i}). "
-    for i in range(4, n-1):
-        prg_facts += f"edge({i},{i+1}). "    
-       
-    prg_problem = "g(1). r(2). edge(1, 3). edge(2, 3)."   
-       
-    P = ground(prg + prg_facts + prg_problem)
-    S = ground(prg + prg_facts)
+    with open(f"coloring_graphs/{n}.txt", "r") as f:
+        prg_facts = "".join(f.readlines())
+    
+    prg_facts += f" node({n+1}). node({n+2}). node({n+3}). node({n+4}). node({n+5})."
+    prg_problem = f"""
+    g({n+1}).
+    r({n+2}).
+    y({n+3}).
+    t({n+4}).  
+    link({n+1}, {n+5}).
+    link({n+2}, {n+5}).
+    link({n+3}, {n+5}).
+    link({n+4}, {n+5})."""  
+
+    P = ground(prg_rules + prg_facts + prg_problem)
+    S = ground(prg_rules + prg_facts)
+
     A = []
-    I = ["b(3)"]
-    E = ["b(3)"]
-    F = ["g(3)"]
+    I = [f"b({n+5})"]
+    E = [f"b({n+5})"]
+    F = [f"g({n+5})"]
     return ((P, S, A), (I, E, F))
 
-
 def ex_sudoku(n):
+    sudo = f"""
+    x(1..{n}). 
+    y(1..{n}). 
+    n(1..{n}). 
+    :- sudoku(X,Y,N), sudoku(A,Y,N), X != A. 
+    :- sudoku(X,Y,N), sudoku(X,B,N), Y != B. 
+    :- sudoku(X,Y,V), sudoku(A,B,V), subgrid(X,Y,A,B), X != A, Y != B. 
+    subgrid(X,Y,A,B) :- x(X), x(A), y(Y), y(B),(X-1)/3 == (A-1)/3, (Y-1)/3 == (B-1)/3. 
+    """
+    sudo += " | ".join([f"sudoku(X,Y,{N})" for N in range(1, n + 1)]) + ":- x(X), y(Y)."
+
+    P = ground(sudo + " sudoku(1,1,1).")
+    S = ground(sudo)
+    A = []
+    I = ["sudoku(1,1,1)", "sudoku(1,2,2)"]
+    E = ["sudoku(1,2,2)"]
+    F = ["sudoku(1,2,1)"]
+    return ((P, S, A), (I, E, F))
+
+def ex_sudoku_simplified(n):
     sudo = f"""
     x(1..{n}). 
     y(1..{n}). 
@@ -157,10 +186,10 @@ def ex_sudoku(n):
                         for v in range(1, n + 1):
                             subgrids += f" :- sudoku({x},{y},{v}), sudoku({a},{b},{v})."
     sudo += " " + subgrids
-    P = ground(sudo + " sudoku(1,1,1). sudoku(1,2,2).")
+    P = ground(sudo)
     S = ground(sudo)
     A = []
     I = ["sudoku(1,1,1)", "sudoku(1,2,2)"]
     E = ["sudoku(1,2,2)"]
-    F = ["sudoku(1,2,1)"]
+    F = ["sudoku(1,2,3)"]
     return ((P, S, A), (I, E, F))
