@@ -1,5 +1,5 @@
 from copy import deepcopy
-from utils import literals_from_body, verify_head_formating, verify_comma_placement, are_choice_atoms_equal, choice_literal_of_rule, unfold_choice_atom_to_ordered_string, parse_choice_atom, clean_head, clean_body, clean_literal, clean_atom
+from utils import elements_from_body_or_predicate, verify_head_formating, verify_comma_placement, are_choice_atoms_equal, choice_literal_of_rule, unfold_choice_atom_to_ordered_string, parse_choice_atom, clean_head, clean_body, clean_literal, clean_atom
 import re
 
 class Program:
@@ -85,7 +85,7 @@ class Rule:
                 except SyntaxError as e:
                     raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e
             try:
-                body = literals_from_body(body)
+                body = elements_from_body_or_predicate(body)
                 self.body = clean_body(body)
             except SyntaxError as e:
                 raise SyntaxError(f"{e} at rule \"{rule_str}\"") from e

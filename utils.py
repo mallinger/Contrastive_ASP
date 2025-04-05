@@ -1,6 +1,6 @@
 import re
 
-def literals_from_body(body):
+def elements_from_body_or_predicate(body):
     off = 0
     literals = []
     literal = ""
@@ -103,7 +103,7 @@ def extract_choice_elements(choice_elements_str):
     for choice_element in choice_elements:
         if ":" in choice_element:
             atom, body = choice_element.split(":")
-            choice_elements_dict[atom.strip()] = literals_from_body(body.strip())
+            choice_elements_dict[atom.strip()] = elements_from_body_or_predicate(body.strip())
         else:
             choice_elements_dict[choice_element.strip()] = []
     return choice_elements_dict

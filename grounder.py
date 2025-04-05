@@ -1,7 +1,7 @@
 import re
 from itertools import product
 from utils import (
-    literals_from_body,
+    elements_from_body_or_predicate,
     parse_choice_atom,
     range_inside_choice,
     start_index_of_predicate,
@@ -94,26 +94,6 @@ def expand_range(program_string):
             result_string += rule + ". "
     return result_string
 
-
-def constants_from_choice_atom(atom):
-    choice_elements, _, guard = parse_choice_atom(atom)
-    constants = re.findall(REGEX_CONSTANTS, guard)
-    for head_atom, literals in choice_elements.items():
-        if "(" in head_atom:
-            constants.extend(re.findall(REGEX_CONSTANTS, head_atom))
-        for literal in literals_from_body(literals):
-            if "(" in literal:
-                constants.extend(re.findall(REGEX_CONSTANTS, literal))
-    return constants
-
-def constants_from_atom(atom):
-    atom = atom.strip()
-    if atom.startswith("{"):
-        return constants_from_choice_atom(atom)
-    if "(" in atom:
-        return re.findall(REGEX_CONSTANTS, atom)
-    return []
-
 def check_arithmetic_in_literal(literal, rel):
     left, right = literal.split(rel)
     if not re.search("[a-zA-Z]", left) and not re.search("[a-zA-Z]", right):
@@ -132,7 +112,6 @@ def check_arithmetic_in_literal(literal, rel):
             return left.strip() != right.strip()
         else:
             raise SyntaxError(f"Can not compare names \"{left.strip()}\" and \"{right.strip()}\" with relation \"{rel}\"")
-    return False
 
 def parse_arithmetic_guard(choice_atom):
     _, relation, guard = parse_choice_atom(choice_atom)
@@ -141,7 +120,7 @@ def parse_arithmetic_guard(choice_atom):
 def parse_arithmetic_expression_predicate(predicate):
     predicate = predicate.strip()
     terms = predicate[predicate.index("(") + 1 : -1]
-    terms_list = literals_from_body(terms)
+    terms_list = elements_from_body_or_predicate(terms)
     terms_list = [str(int(eval(t))) if any(operator in t for operator in ["+", "-", "*", "/"]) else t for t in terms_list]
     return predicate[:predicate.index("(") + 1] + ", ".join(terms_list) + ")"
 
@@ -209,7 +188,7 @@ def parse_arithmetic_equations(grounded_program):
             if "{" not in atom:
                 relation = relation_of_atom(atom)
                 if relation is not None:
-                    raise SyntaxError("Comparisons in head outside choice atom are not allowed.")
+                    raise SyntaxError("Comparisons in rule head outside of choice atoms are not allowed.")
             else:
                 relation = relation_of_atom(atom)
                 if relation is not None:
@@ -239,6 +218,25 @@ def replace_variables(program_string, constants):
             grounded_program.add_rule(f"{grounded_rule}.")
     return grounded_program
 
+def constants_from_choice_atom(atom):
+    choice_elements, _, guard = parse_choice_atom(atom)
+    constants = re.findall(REGEX_CONSTANTS, guard)
+    for head_atom, literals in choice_elements.items():
+        if "(" in head_atom:
+            constants.extend(re.findall(REGEX_CONSTANTS, head_atom))
+        for literal in elements_from_body_or_predicate(literals):
+            if "(" in literal:
+                constants.extend(re.findall(REGEX_CONSTANTS, literal))
+    return constants
+
+def constants_from_atom(atom):
+    atom = atom.strip()
+    if atom.startswith("{"):
+        return constants_from_choice_atom(atom)
+    if "(" in atom:
+        return re.findall(REGEX_CONSTANTS, atom)
+    return []
+
 def constants_of_program(program_string):
     constants = []
     for rule in re.split(r"\.\s+", program_string[:-1]):
@@ -251,7 +249,7 @@ def constants_of_program(program_string):
         head_atoms = head.split("|")
         for head_atom in head_atoms:
             constants.extend(constants_from_atom(head_atom))
-        for literal in literals_from_body(body):
+        for literal in elements_from_body_or_predicate(body):
             constants.extend(constants_from_atom(literal))
     return list(set(constants))
 
