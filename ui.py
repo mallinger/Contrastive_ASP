@@ -188,6 +188,13 @@ class Window(QWidget):
             msg.setIcon(QMessageBox.Critical)
             msg.exec()
             return
+        except NotImplementedError as ni_error:
+            msg = QMessageBox()
+            msg.setText("Not Implemented Error")
+            msg.setInformativeText(str(ni_error))
+            msg.setIcon(QMessageBox.Critical)
+            msg.exec()
+            return
         S = self.S_edit.toPlainText()
         A = self.assumptions_edit.text().split(",")
         I = self.interpretation_edit.toPlainText().split(", ")
