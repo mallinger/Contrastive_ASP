@@ -11,7 +11,7 @@ from utils import (
 )
 from program import Program, Rule
 
-REGEX_CONSTANTS = r"(?!not)(?<!#)\b[a-z0-9]\w*\b(?!\()"
+REGEX_CONSTANTS = r"(?!not)\b[a-z0-9]\w*\b(?!\()"
 REGEX_RANGE = r"(\d+)\.\.(\d+)"
 REGEX_VARIABLES = r"[^a-z]([A-Z]\w*)"
 REGEX_SUBSTITUTION = lambda v: rf"(?<![\w]){v}(?![\w])"
@@ -94,28 +94,6 @@ def expand_range(program_string):
             result_string += rule + ". "
     return result_string
 
-def check_arithmetic_in_literal(literal, rel):
-    left, right = literal.split(rel)
-    if not re.search("[a-zA-Z]", left) and not re.search("[a-zA-Z]", right):
-        if "," in left:
-            if rel == "==":
-                return left.strip() == right.strip()
-            elif rel == "!=":
-                return left.strip() != right.strip()
-            else:
-                return False
-        return eval(f"{int(eval(left))}{rel}{int(eval(right))}")
-    else:
-        if rel == "==":
-            return left.strip() == right.strip()
-        if rel == "!=":
-            return left.strip() != right.strip()
-        else:
-            raise SyntaxError(f"Can not compare names \"{left.strip()}\" and \"{right.strip()}\" with relation \"{rel}\"")
-
-def parse_arithmetic_guard(choice_atom):
-    _, relation, guard = parse_choice_atom(choice_atom)
-    return choice_atom[0 : choice_atom.index(relation) + len(relation)] + str(int(eval(guard)))
 
 def parse_arithmetic_expression_predicate(predicate):
     predicate = predicate.strip()
@@ -157,10 +135,30 @@ def parse_arithmetic_expressions(grounded_program):
                     else:
                         parsed_expression = parse_arithmetic_expression_predicate(b)
                     rule_to_add.add_literal(parsed_expression)
-
         grounded_program_parsed.add_rule(rule_to_add)
-
+        
     return grounded_program_parsed
+
+def compare_tuples_or_names(left, right, rel):
+    if rel == "==":
+        return left.strip() == right.strip()
+    if rel == "!=":
+        return left.strip() != right.strip()
+    raise SyntaxError(f"Can not compare tuples or names \"{left.strip()}\" and \"{right.strip()}\" with relation \"{rel}\"")
+
+def check_arithmetic_in_literal(literal, rel):
+    left, right = literal.split(rel)
+    if not re.search("[a-zA-Z]", left) and not re.search("[a-zA-Z]", right):
+        if "," in left:
+           return compare_tuples_or_names(left, right, rel)
+        return eval(f"{int(eval(left))}{rel}{int(eval(right))}")
+    else:
+        return compare_tuples_or_names(left, right, rel)
+
+def parse_arithmetic_guard(choice_atom):
+    _, relation, guard = parse_choice_atom(choice_atom)
+    return choice_atom[0 : choice_atom.index(relation) + len(relation)] + str(int(eval(guard)))
+
 
 def parse_arithmetic_equations(grounded_program):
     grounded_program_parsed = Program("")
@@ -168,33 +166,29 @@ def parse_arithmetic_equations(grounded_program):
         rule_to_add = Rule(str(rule))
         valid = True
         for literal in rule.body:
-            if "{" not in literal:
-                relation = relation_of_atom(literal)
-                if relation is not None:
+            relation = relation_of_atom(literal)
+            if relation is not None:
+                if "{" not in literal:
                     valid_literal = check_arithmetic_in_literal(literal, relation)
                     if valid_literal:
                         rule_to_add.remove_literal(literal)
                     else:
                         valid = False
                         break
-            else:
-                relation = relation_of_atom(literal)
-                if relation is not None:
+                else:
                     rule_to_add.remove_literal(literal)
                     rule_to_add.add_literal(parse_arithmetic_guard(literal))
                     break
 
         for atom in rule.head:
-            if "{" not in atom:
-                relation = relation_of_atom(atom)
-                if relation is not None:
+            relation = relation_of_atom(atom)
+            if relation is not None:
+                if "{" not in atom:
                     raise SyntaxError("Comparisons in rule head outside of choice atoms are not allowed.")
-            else:
-                relation = relation_of_atom(atom)
-                if relation is not None:
+                else:
                     rule_to_add.head = [h for h in rule_to_add.head if h != atom]
                     rule_to_add.head.append(parse_arithmetic_guard(atom))
-                    break
+                    
         if valid:
             grounded_program_parsed.add_rule(rule_to_add)
     return grounded_program_parsed
@@ -221,12 +215,9 @@ def replace_variables(program_string, constants):
 def constants_from_choice_atom(atom):
     choice_elements, _, guard = parse_choice_atom(atom)
     constants = re.findall(REGEX_CONSTANTS, guard)
-    for head_atom, literals in choice_elements.items():
+    for head_atom in choice_elements.keys():
         if "(" in head_atom:
             constants.extend(re.findall(REGEX_CONSTANTS, head_atom))
-        for literal in elements_from_body_or_predicate(literals):
-            if "(" in literal:
-                constants.extend(re.findall(REGEX_CONSTANTS, literal))
     return constants
 
 def constants_from_atom(atom):
@@ -266,7 +257,7 @@ def ground(program_string, constants=None):
         re.search(r"(?<!\d)\.\.", program_string) is not None
         or re.search(r"\.\.(?!\d)", program_string) is not None
     ):
-        raise SyntaxError("Program contains invalid range notation.")
+        raise NotImplementedError("Range notation is not supported for variables.")
 
     while ".." in program_string:
         program_string = expand_range(program_string).strip()

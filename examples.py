@@ -113,14 +113,12 @@ def ex_nqueens(n):
     F = ["queen(1, 3)"]
     return ((P, S, A), (I, E, F))
     
-    
-    
-def ex_coloring(n):
-    prg_rules = """b(X) | r(X) | g(X) | y(X) | t(X) :- node(X). 
+def ex_coloring_old(n):
+    prg_rules = """b(X) | r(X) | g(X) | y(X) | c(X) :- node(X). 
     :- b(X), b(Y), link(X, Y). 
     :- g(X), g(Y), link(X, Y). 
     :- y(X), y(Y), link(X, Y). 
-    :- t(X), t(Y), link(X, Y). 
+    :- c(X), c(Y), link(X, Y). 
     :- r(X), r(Y), link(X, Y).
      """
     
@@ -132,7 +130,7 @@ def ex_coloring(n):
     g({n+1}).
     r({n+2}).
     y({n+3}).
-    t({n+4}).  
+    c({n+4}).  
     link({n+1}, {n+5}).
     link({n+2}, {n+5}).
     link({n+3}, {n+5}).
@@ -147,6 +145,61 @@ def ex_coloring(n):
     F = [f"g({n+5})"]
     return ((P, S, A), (I, E, F))
 
+def ex_coloring(n, i):
+    prg_rules = """b(X) | r(X) | g(X) | y(X) | c(X) :- node(X). 
+    :- b(X), b(Y), link(X, Y). 
+    :- g(X), g(Y), link(X, Y). 
+    :- y(X), y(Y), link(X, Y). 
+    :- c(X), c(Y), link(X, Y). 
+    :- r(X), r(Y), link(X, Y).
+     """
+    
+    with open(f"coloring_graphs/{n}.txt", "r") as f:
+        prg_graph = "".join(f.readlines())
+    
+    with open(f"coloring_graphs/{n}_solution.txt", "r") as f:
+        prg_coloring = " ".join([f"{atom.strip()}." for atom in  f.readlines()])
+    
+    P = ground(prg_rules + prg_graph + prg_coloring )
+    
+
+    S = ground(prg_rules + prg_graph)
+    chosen_node = [node for node in prg_coloring.split(" ") if f"({i})." in node][0][:-1]
+    color_chosen_node = chosen_node[0]
+    
+    A = []
+    I = prg_coloring[:-1].split(". ")
+    E = [chosen_node]
+    F = [f"g({i})"] if color_chosen_node == 'b' else [f"b({i})"]
+    return ((P, S, A), (I, E, F))
+
+def solve_coloring():
+    from solver import solve_return_model
+    prg_rules = """b(X) | r(X) | g(X) | y(X) | c(X) :- node(X). 
+    :- b(X), b(Y), link(X, Y). 
+    :- g(X), g(Y), link(X, Y). 
+    :- y(X), y(Y), link(X, Y). 
+    :- c(X), c(Y), link(X, Y). 
+    :- r(X), r(Y), link(X, Y).
+    """
+    for n in range(130,140,5):
+        with open(f"coloring_graphs/{n}.txt", "r") as f:
+            solution_atoms = solve_return_model([prg_rules,"".join(f.readlines())])
+            filtered_atoms = [atom for atom in solution_atoms if "node" not in atom and "link" not in atom]
+            with open(f"coloring_graphs/{n}_solution.txt", "w") as f2:
+                for atom in filtered_atoms:
+                    f2.write(f"{atom}\n")
+
+
+def create_graphs():
+    for i in range(10,155,5):
+        with open(f"coloring_graphs/150.txt", "r") as f:
+            lines = [l.strip() for l in f.readlines()]
+            lines = [l for l in lines if not any(str(n) in l for n in range(i+1, 151))]
+            with open(f"coloring_graphs/{i}.txt","w") as f2:
+                for l in lines:
+                    f2.write(f"{l}\n")        
+
 def ex_sudoku(n):
     sudo = f"""
     x(1..{n}). 
@@ -155,7 +208,7 @@ def ex_sudoku(n):
     :- sudoku(X,Y,N), sudoku(A,Y,N), X != A. 
     :- sudoku(X,Y,N), sudoku(X,B,N), Y != B. 
     :- sudoku(X,Y,V), sudoku(A,B,V), subgrid(X,Y,A,B), X != A, Y != B. 
-    subgrid(X,Y,A,B) :- x(X), x(A), y(Y), y(B),(X-1)/3 == (A-1)/3, (Y-1)/3 == (B-1)/3. 
+    subgrid(X,Y,A,B) :- x(X), x(A), y(Y), y(B),(X-1)/Sqrt_n == (A-1)/Sqrt_n, (Y-1)/Sqrt_n == (B-1)/Sqrt_n, Sqrt_n * Sqrt_n == n. 
     """
     sudo += " | ".join([f"sudoku(X,Y,{N})" for N in range(1, n + 1)]) + ":- x(X), y(Y)."
 
@@ -186,10 +239,10 @@ def ex_sudoku_simplified(n):
                         for v in range(1, n + 1):
                             subgrids += f" :- sudoku({x},{y},{v}), sudoku({a},{b},{v})."
     sudo += " " + subgrids
-    P = ground(sudo)
+    P = ground(sudo + " sudoku(1,1,1).")
     S = ground(sudo)
     A = []
     I = ["sudoku(1,1,1)", "sudoku(1,2,2)"]
     E = ["sudoku(1,2,2)"]
-    F = ["sudoku(1,2,3)"]
+    F = ["sudoku(1,2,1)"]
     return ((P, S, A), (I, E, F))
