@@ -3,10 +3,10 @@ from program_strings import META_STR, COUNTERFACTUAL_STR, META_STR_ALL_LITERALS
 from reification import manual_reify, reified_to_original_rules
 from solver import solve_return_all_subset_maximal_models
 from program import Rule, Program
-from utils import remove_meta_atoms, remove_reification_atoms
+from utils import remove_meta_atoms, remove_reification_atoms, clean_atom
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(encoding="utf-8", level=logging.INFO)
+logging.basicConfig(encoding="utf-8", level=logging.DEBUG)
 
 
 def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
@@ -25,6 +25,8 @@ def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
     for f in F:
         if not P.contains_atom(f):
             raise ValueError(f"Foil {f} does not appear in the program.")
+        
+    A = set([clean_atom(a) for a in A]) 
 
     P_options = P - S
     assumptions = [
