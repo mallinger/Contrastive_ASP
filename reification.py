@@ -205,7 +205,7 @@ def manual_reify_choice(rule, atoms, rule_index, reified, amount_of_rules):
 def manual_reify(program, S, meta_atoms):
     atoms = {}
     reified_program = Program("")
-    rules = program.rules
+    rules = sorted(program.rules, key=lambda r:str(r))
     amount_of_rules = len(rules)
     for rule_index, rule in enumerate(rules):
         rule_type = "choice" if rule.is_choice() else "disjunction"

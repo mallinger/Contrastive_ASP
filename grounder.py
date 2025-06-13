@@ -150,7 +150,7 @@ def check_arithmetic_in_literal(literal, rel):
     left, right = literal.split(rel)
     if not re.search("[a-zA-Z]", left) and not re.search("[a-zA-Z]", right):
         if "," in left:
-           return compare_tuples_or_names(left, right, rel)
+            return compare_tuples_or_names(left, right, rel)
         return eval(f"{int(eval(left))}{rel}{int(eval(right))}")
     else:
         return compare_tuples_or_names(left, right, rel)

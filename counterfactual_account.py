@@ -68,14 +68,15 @@ def counterfactual_accounts(EF, CEP, number_of_counterfactual_accounts):
         "Original reified rules translated: %s\n", reified_to_original_rules(reified)
     )
 
+    reified = " ".join(sorted([str(rule) for rule in reified.rules]))
     I_primes = solve_return_all_subset_maximal_models(
-        [str(reified), META_STR, COUNTERFACTUAL_STR], number_of_counterfactual_accounts
+        [reified, META_STR, COUNTERFACTUAL_STR], number_of_counterfactual_accounts
     )
 
     if I_primes == "UNSAT":
         raise ValueError("Impossible to derive the foil.")
     counterfactual_models_all_literals = solve_return_all_subset_maximal_models(
-        [str(reified), META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], number_of_counterfactual_accounts
+        [reified, META_STR_ALL_LITERALS, COUNTERFACTUAL_STR], number_of_counterfactual_accounts
     )
 
     I_primes = remove_meta_atoms(I_primes)

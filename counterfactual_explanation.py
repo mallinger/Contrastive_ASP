@@ -57,4 +57,4 @@ def counterfactual_explanations(explanation_frame, contrastive_explanation_probl
         for Q1 in set(Q1s):
             for Q2 in set(Q2s):
                 CFEs.append((Q1, Q2, Q_delta))
-    return set(CFEs[:number_of_explanations])
+    return set(CFEs)
