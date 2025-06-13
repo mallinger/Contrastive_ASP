@@ -9,7 +9,7 @@ from contrastive_explanation import contrastive_explanations
 
 from grounder import ground, constants_of_program
 from program import Program, Rule
-from utils import predicates_of_program
+from utils import predicates_of_program, elements_from_body_or_predicate
 
 LABEL_STYLE = "font-weight: bold; font-size: 16px"
 LABEL_STYLE_RED = "font-weight: bold; font-size: 16px; color: red"
@@ -196,11 +196,11 @@ class Window(QWidget):
             msg.exec()
             return
         S = self.S_edit.toPlainText()
-        A = self.assumptions_edit.text().split(",")
+        A = elements_from_body_or_predicate(self.assumptions_edit.text())
         I = self.interpretation_edit.toPlainText().split(", ")
-        E = self.explanandum_edit.text().split(",")
+        E = elements_from_body_or_predicate(self.explanandum_edit.text())
         E = list(map(str.strip, E))
-        F = self.foil_edit.text().split(",")
+        F = elements_from_body_or_predicate(self.foil_edit.text())
         F = list(map(str.strip, F))
         
         number_of_counterfactual_accounts = int(self.number_of_CA_edit.text())
@@ -281,7 +281,7 @@ class Window(QWidget):
 
             self.program_edit.setText(str(self.program).replace(". ", ".\n"))
 
-            self.predicates = predicates_of_program(ground(str(self.program)))
+            self.predicates = sorted(predicates_of_program(ground(str(self.program))))
             self.update_autocomplete(self.predicates)
 
             self.update_menus()
@@ -353,7 +353,7 @@ class Window(QWidget):
             pass
 
     def update_ui(self):
-        self.predicates = predicates_of_program(ground(str(self.program)))
+        self.predicates = sorted(predicates_of_program(ground(str(self.program))))
         self.assumption_menu.clear()
         self.explanandum_menu.clear()
         self.foil_menu.clear()
