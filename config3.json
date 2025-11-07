@@ -1,7 +1,7 @@
 {
-    "S": " :- b(two), b(one), edge(two, one). node(two).  :- g(one), g(one), edge(one, one).  :- b(one), b(two), edge(one, two).  :- g(one), g(three), edge(one, three). node(three). b(one) | r(one) | g(one) :- node(one).  :- b(three), b(two), edge(three, two).  :- b(three), b(one), edge(three, one).  :- r(three), r(one), edge(three, one).  :- r(two), r(one), edge(two, one). b(two) | r(two) | g(two) :- node(two).  :- r(three), r(two), edge(three, two). b(three) | r(three) | g(three) :- node(three).  :- b(two), b(three), edge(two, three).  :- g(two), g(one), edge(two, one). node(one).  :- g(three), g(two), edge(three, two).  :- g(two), g(three), edge(two, three).  :- g(three), g(three), edge(three, three).  :- r(one), r(three), edge(one, three).  :- g(three), g(one), edge(three, one).  :- b(one), b(three), edge(one, three).  :- b(two), b(two), edge(two, two).  :- b(one), b(one), edge(one, one).  :- g(one), g(two), edge(one, two).  :- r(one), r(two), edge(one, two).  :- r(two), r(three), edge(two, three).  :- r(three), r(three), edge(three, three).  :- b(three), b(three), edge(three, three).  :- r(one), r(one), edge(one, one).  :- r(two), r(two), edge(two, two).  :- g(two), g(two), edge(two, two).",
+    "S": " :- blue(X), blue(Y), link(X, Y). :- green(X), green(Y), link(X, Y). :- red(X), red(Y), link(X, Y).  node(three). node(two). node(one). blue(X) | red(X) | green(X) :- node(X).",
     "A": [""],
-    "I": ["g(three)"],
-    "E": ["b(three)"],
-    "F": ["g(three)"]
+    "I": ["green(three)"],
+    "E": ["blue(three)"],
+    "F": ["green(three)"]
 }

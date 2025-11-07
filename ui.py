@@ -301,7 +301,8 @@ class Window(QWidget):
         for rule in sorted(self.program.rules):
             rule_hbox = QHBoxLayout()
             rule_s_button = QPushButton(text="S")
-            rule_edit = QLineEdit(text=str(rule))
+            rule_s_button.setMaximumWidth(50)
+            rule_edit = QLabel(text=str(rule))
             rule_s_button.clicked.connect(
                 lambda _, x=rule, y=rule_edit: self.s_selected(x, y))
 
