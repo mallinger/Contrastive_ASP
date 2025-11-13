@@ -1,3 +1,16 @@
+"""
+Grounder Module
+
+This module contains the grounder, which generates a variable free answer set program
+out of a given input program. 
+
+The grounder expands range notations, parses and simplifies arithmetic expressions and equations. 
+
+This version does not support aggregates, conditionals inside choice atoms or 
+range notation with variables.
+"""
+
+
 import re
 from itertools import product
 from utils import (
@@ -17,14 +30,36 @@ REGEX_VARIABLES = r"[^a-z]([A-Z]\w*)"
 REGEX_SUBSTITUTION = lambda v: rf"(?<![\w]){v}(?![\w])"
 
 
-def range_expanded_atom_list(rule, start_index, end_index, start, end):
-    predicate_start_index = start_index_of_predicate(rule, start_index)
-    predicate_parenthesis_start_index = rule[:start_index].rindex("(") + 1
-    predicate_parenthesis_end_index = end_index + rule[end_index:].index(")") + 1
-    predicate = rule[predicate_start_index : predicate_parenthesis_start_index - 1]
+def range_expanded_atom_list(choice_head, start_index, end_index, start, end):
+    """
+    Return a list of atoms, each representing a step of the given range 
 
-    pre_range = rule[predicate_parenthesis_start_index:start_index]
-    post_range = rule[end_index:predicate_parenthesis_end_index]
+    Parameters
+    ----------
+    choice_head : str
+        The choice_head containing the predicate with a range.
+    start_index : int
+        The starting index of the range in the rule string.
+    end_index : int
+        The ending index of the range in the rule string.
+    start : int
+        The starting integer of the range.
+    end : int
+        The ending integer of the range.
+
+    Returns
+    -------
+    list
+        A list of atoms, each representing a step of the range.
+    """
+
+    predicate_start_index = start_index_of_predicate(choice_head, start_index)
+    predicate_parenthesis_start_index = choice_head[:start_index].rindex("(") + 1
+    predicate_parenthesis_end_index = end_index + choice_head[end_index:].index(")") + 1
+    predicate = choice_head[predicate_start_index : predicate_parenthesis_start_index - 1]
+
+    pre_range = choice_head[predicate_parenthesis_start_index:start_index]
+    post_range = choice_head[end_index:predicate_parenthesis_end_index]
 
     atoms = []
     for i in range(start, end + 1):
@@ -33,6 +68,22 @@ def range_expanded_atom_list(rule, start_index, end_index, start, end):
 
 
 def range_info(atom):
+    """
+    Extract range information from a choice rule's head containing a range notation.
+
+    Parameters
+    ----------
+    atom : str
+        A choice rule's head that contains a range notation.
+
+    Returns
+    -------
+    tuple
+        A tuple (start, end, start_index, end_index) where `start` and `end` are 
+        the limits of the range, and `start_index` and `end_index` are 
+        the positions of the range numbers in the string.
+    """
+
     limits = re.search(REGEX_RANGE, atom)
     start, end = int(limits.group(1)), int(limits.group(2))
     start_index = limits.start(1)
@@ -40,6 +91,24 @@ def range_info(atom):
     return start, end, start_index, end_index
 
 def range_expanded_rule(rule):
+    """
+    Expand a range notation of a rule.
+    In order to remove several range notations of the rule
+    the function has to be called repeatedly.
+    
+    Parameters
+    ----------
+    rule : str
+        A rule that contains at least one range notation.
+        The '.' at the end of the rule must be removed
+
+    Returns
+    -------
+    str
+        The rule with one range expanded.
+    """
+
+
     limits = re.search(REGEX_RANGE, rule)
     start, end = int(limits.group(1)), int(limits.group(2))
     start_index = limits.start(1)
@@ -86,6 +155,21 @@ def range_expanded_rule(rule):
         return result_string
 
 def expand_range(program_string):
+    """
+    Expand one range notation per rule in an answer set program.
+    In order to remove all range notations the function has
+    to be called repeatedly.
+    
+    Parameters
+    ----------
+    program_string : str
+        The answer set program that may contain range notations as a string.
+
+    Returns
+    -------
+    str
+        The program string with one range notation per rule expanded.
+    """
     result_string = ""
     for rule in re.split(r"\.\s+", program_string[:-1]):
         if ".." in rule:
@@ -96,6 +180,19 @@ def expand_range(program_string):
 
 
 def parse_arithmetic_expression_predicate(predicate):
+    """
+    Parse and evaluate arithmetic expressions within a predicate.
+    
+    Parameters
+    ----------
+    predicate : str
+        A predicate string containing arithmetic expressions.
+
+    Returns
+    -------
+    str
+        The predicate with arithmetic expressions parsed and simplified.    
+    """
     predicate = predicate.strip()
     terms = predicate[predicate.index("(") + 1 : -1]
     terms_list = elements_from_body_or_predicate(terms)
@@ -103,6 +200,19 @@ def parse_arithmetic_expression_predicate(predicate):
     return predicate[:predicate.index("(") + 1] + ", ".join(terms_list) + ")"
 
 def parse_arithmetic_expression_choice(choice_atom):
+    """
+    Parse arithmetic expressions within a choice atom.
+    
+    Parameters
+    ----------
+    choice_atom : str
+        A choice atom containing arithmetic expressions.
+
+    Returns
+    -------
+    str
+        The choice atom with arithmetic expressions parsed and simplified.
+    """
     choice_elements, relation, guard = parse_choice_atom(choice_atom)
     parsed_choice_elements = []
     for choice_element in choice_elements:
@@ -114,6 +224,19 @@ def parse_arithmetic_expression_choice(choice_atom):
 
 
 def parse_arithmetic_expressions(grounded_program):
+    """
+    Parse and simplify arithmetic expressions in a grounded program.
+
+    Parameters
+    ----------
+    grounded_program : Program
+        The grounded answer set program as a Program object.
+
+    Returns
+    -------
+    Program
+        A new Program object with all arithmetic expressions parsed and simplified. 
+    """
     grounded_program_parsed = Program("")
     for rule in grounded_program.rules:
         rule_to_add = Rule(str(rule))
@@ -136,10 +259,32 @@ def parse_arithmetic_expressions(grounded_program):
                         parsed_expression = parse_arithmetic_expression_predicate(b)
                     rule_to_add.add_literal(parsed_expression)
         grounded_program_parsed.add_rule(rule_to_add)
-        
+
     return grounded_program_parsed
 
 def compare_tuples_or_names(left, right, rel):
+    """
+    Compare two strings or tuples using the specified equality relation.
+
+    Parameters
+    ----------
+    left : str
+        The left-hand string or tuple to compare.
+    right : str
+        The right-hand string or tuple to compare.
+    rel : str
+        The comparison operator, either '==' or '!='.
+
+    Returns
+    -------
+    bool
+        True if the comparison holds according to the specified relation, False otherwise.
+
+    Raises
+    ------
+    SyntaxError
+        If a relation other than '==' or '!=' is provided.
+    """
     if rel == "==":
         return left.strip() == right.strip()
     if rel == "!=":
@@ -147,6 +292,23 @@ def compare_tuples_or_names(left, right, rel):
     raise SyntaxError(f"Can not compare tuples or names \"{left.strip()}\" and \"{right.strip()}\" with relation \"{rel}\"")
 
 def check_arithmetic_in_literal(literal, rel):
+    """
+    Parse and evaluate arithmetic equation in form of a literal.
+    In case of non numeric values the names or tuples are compared.
+    
+    Parameters
+    ----------
+    literal : str
+        A literal containing an arithmetic equation.
+    rel : str
+        The relation symbol in the literal.
+
+    Returns
+    -------
+    bool
+        True if the comparison holds according to the specified relation, False otherwise.
+    """
+
     left, right = literal.split(rel)
     if not re.search("[a-zA-Z]", left) and not re.search("[a-zA-Z]", right):
         if "," in left:
@@ -156,11 +318,39 @@ def check_arithmetic_in_literal(literal, rel):
         return compare_tuples_or_names(left, right, rel)
 
 def parse_arithmetic_guard(choice_atom):
+    """
+    Parse and evaluate arithmetic expression in a choice atom's guard if present
+    
+    Parameters
+    ----------
+    choice atom : str
+        A choice atom as a string.
+
+    Returns
+    -------
+    str
+        The choice atom with arithmetic guard simplified.
+    """
+
     _, relation, guard = parse_choice_atom(choice_atom)
     return choice_atom[0 : choice_atom.index(relation) + len(relation)] + str(int(eval(guard)))
 
 
 def parse_arithmetic_equations(grounded_program):
+    """
+    Parse and evaluate arithmetic equations in a given grounded answer set program.
+    In case of a choice atom the arithmetic expression in the guard is simplified if present.
+    
+    Parameters
+    ----------
+    grounded_program : Program object
+        The grounded answer set program as a Program object.
+
+    Returns
+    -------
+    Program
+        A new Program object with arithmetic equations simplified.
+    """
     grounded_program_parsed = Program("")
     for rule in grounded_program.rules:
         rule_to_add = Rule(str(rule))
@@ -185,19 +375,45 @@ def parse_arithmetic_equations(grounded_program):
             if relation is not None:
                 if "{" not in atom:
                     raise SyntaxError("Comparisons in rule head outside of choice atoms are not allowed.")
-                else:
-                    rule_to_add.head = [h for h in rule_to_add.head if h != atom]
-                    rule_to_add.head.append(parse_arithmetic_guard(atom))
-                    
+                rule_to_add.head = [h for h in rule_to_add.head if h != atom]
+                rule_to_add.head.append(parse_arithmetic_guard(atom))
+
         if valid:
             grounded_program_parsed.add_rule(rule_to_add)
     return grounded_program_parsed
 
 def parse_arithmetic(grounded_program):
+    """
+    Parse and evaluate arithmetic equations and expressions in a given grounded answer set program.
+    
+    Parameters
+    ----------
+    grounded_program : Program object
+        The grounded answer set program as a Program object.
+
+    Returns
+    -------
+    str
+        A ground Program object with all arithmetic parts simplified.
+    """
     grounded_program = parse_arithmetic_equations(grounded_program)
-    return parse_arithmetic_expressions(grounded_program) 
+    return parse_arithmetic_expressions(grounded_program)
 
 def replace_variables(program_string, constants):
+    """
+    Replace all variables in an answer set program with all possible combinations of constants.
+    
+    ----------
+    program_string : str
+        The answer set program as a string containing variables.
+    constants : list
+        A list of constants used to replace variables.
+
+    Returns
+    -------
+    Program
+        A ground Program object without variables.
+    """
     grounded_program = Program("")
     for rule in re.split(r"\.\s+", program_string[:-1]):
         rule = rule.strip()
@@ -212,8 +428,22 @@ def replace_variables(program_string, constants):
             grounded_program.add_rule(f"{grounded_rule}.")
     return grounded_program
 
-def constants_from_choice_atom(atom):
-    choice_elements, _, guard = parse_choice_atom(atom)
+def constants_from_choice_atom(choice_atom):
+    """
+    Extract all constant of a given choice atom.
+    
+    Parameters
+    ----------
+    atom : str
+        The choice atom as a string.
+
+    Returns
+    -------
+    list
+        A list of constants found in the choice atom
+    """
+
+    choice_elements, _, guard = parse_choice_atom(choice_atom)
     constants = re.findall(REGEX_CONSTANTS, guard)
     for head_atom in choice_elements.keys():
         if "(" in head_atom:
@@ -221,6 +451,19 @@ def constants_from_choice_atom(atom):
     return constants
 
 def constants_from_atom(atom):
+    """
+    Extract all constant of a given atom.
+    
+    Parameters
+    ----------
+    atom : str
+        The atom as a sting.
+
+    Returns
+    -------
+    list
+        A list of constants found in the atom
+    """
     atom = atom.strip()
     if atom.startswith("{"):
         return constants_from_choice_atom(atom)
@@ -229,6 +472,20 @@ def constants_from_atom(atom):
     return []
 
 def constants_of_program(program_string):
+    """
+    Extract all constant of a given answer set program.
+    
+    Parameters
+    ----------
+    program_string : str
+        The answer set program as a string.
+
+    Returns
+    -------
+    list
+        A list of constants in the program.
+    """
+
     constants = []
     for rule in re.split(r"\.\s+", program_string[:-1]):
         if ":-" not in rule:
@@ -245,6 +502,28 @@ def constants_of_program(program_string):
     return list(set(constants))
 
 def ground(program_string, constants=None):
+    """
+    Ground an answer set program by expanding ranges and parsing arithmetic expressions
+    
+    Parameters
+    ----------
+    program_string : str
+        The answer set program as a string.
+    constants : list, optional
+        A list of the constants in the program. If it is not provided, the list is generated
+         
+    Returns
+    -------
+    str
+        The grounded program as a string.
+        
+    Raises
+    ------
+    NotImplementedError
+        If the program uses aggregates, conditials in choice atoms or range notation with variables.
+    SyntaxError
+        If the program contains invalid syntax.
+    """
     program_string = program_string.strip()
 
     if any(aggregate in program_string for aggregate in ["#sum", "#count", "#max", "#min"]):
