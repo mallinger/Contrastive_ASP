@@ -1,4 +1,10 @@
+"""
+Answer Set Program Strings Module
 
+This module contains several answer set programs in string form,
+which are needed in counterfactual_account.py
+
+"""
 
 META_STR = """
 #defined weighted_literal_tuple/3.
@@ -31,7 +37,6 @@ body(sum(B,G))  :- rule(_,sum(B,G)),
 
   hold(A) : atom_tuple(H,A)   :- rule(disjunction(H),B), body(B).
 { hold(A) : atom_tuple(H,A) } :- rule(     choice(H),B), body(B).
-
 """
 
 
@@ -40,4 +45,3 @@ COUNTERFACTUAL_STR = """
         :- not hold(F), output(foil(A),_), output(A,N), literal_tuple(N,F).
         {hold(S)} :- output(assumption(A),_), output(A,N), literal_tuple(N,S).
     """
-    

@@ -1,5 +1,18 @@
+"""
+Reification Module
+
+This module is used to manually reify an answer set program or
+to transform a reified program back into the normal rules.
+"""
+
+from utils import (
+    parse_choice_atom,
+    choice_literal_of_rule,
+    relations,
+    relations_rev,
+    choice_atom_without_relation
+    )
 from program import Program, Rule
-from utils import parse_choice_atom, choice_literal_of_rule, relations, relations_rev, choice_atom_without_relation
 
 
 def add_reified_atom(atom, atoms, rule_index, reified, amount_of_rules):
@@ -72,7 +85,8 @@ def manual_reify_choice_body(rule, atoms, rule_index, reified, amount_of_rules):
     # rule for choice information
     reified.add_rule(f"rule(disjunction(f{rule_index}), normal(f{rule_index})).")
     if relation != "":
-        manual_reify_rule(Rule(f"choice_info({rule_index}, {relations_rev[relation]}, {guard})."), atoms, f"f{rule_index}", reified, amount_of_rules)
+        manual_reify_rule(Rule(f"choice_info({rule_index}, {relations_rev[relation]}, {guard})."),
+                          atoms, f"f{rule_index}", reified, amount_of_rules)
     else:
         manual_reify_rule(Rule(f"choice_info({rule_index})."), atoms, f"f{rule_index}", reified, amount_of_rules)
 
@@ -111,7 +125,8 @@ def manual_reify_choice_body(rule, atoms, rule_index, reified, amount_of_rules):
         manual_reify_rule(Rule(f"helper(m{rule_index})."), atoms, f"m{rule_index}", reified, amount_of_rules)
 
         reified.add_rule(f"rule(disjunction(n{rule_index}), normal(n{rule_index})).")
-        manual_reify_rule(Rule(f"helper(n{rule_index}):- helper(l{rule_index}), not helper(m{rule_index})."), atoms, f"n{rule_index}", reified, amount_of_rules)
+        manual_reify_rule(Rule(f"helper(n{rule_index}):- helper(l{rule_index}), not helper(m{rule_index})."),
+                          atoms, f"n{rule_index}", reified, amount_of_rules)
 
     manual_reify_rule(rule_without_choice_atom, atoms, rule_index, reified, amount_of_rules)
 
@@ -137,7 +152,8 @@ def manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules):
     reified.add_rule(f"rule(disjunction(f{rule_index}), normal(f{rule_index})).")
     if relation != "":
         guard = int(guard)
-        manual_reify_rule(Rule(f"choice_info({rule_index}, {relations_rev[relation]}, {guard})."), atoms, f"f{rule_index}", reified, amount_of_rules)
+        manual_reify_rule(Rule(f"choice_info({rule_index}, {relations_rev[relation]}, {guard})."),
+                          atoms, f"f{rule_index}", reified, amount_of_rules)
     else:
         guard = 0
         manual_reify_rule(Rule(f"choice_info({rule_index})."), atoms, f"f{rule_index}", reified, amount_of_rules)
@@ -353,7 +369,7 @@ def recreate_choice_rules_head(normal_program, choice_info_elements):
         else:
             choice_body = find_choice_body_with_id(normal_program, f"helper(a{rule_id})")
             if choice_body != []:
-                 normal_program.add_rule(f"{choice_head} :- {",".join(choice_body)}.")
+                normal_program.add_rule(f"{choice_head} :- {",".join(choice_body)}.")
             else:
                 normal_program.add_rule(f"{choice_head}.")
 
@@ -361,14 +377,14 @@ def recreate_choice_rules_body(normal_program, choice_info_elements):
     for choice_rule_info in choice_info_elements:
         rule_id = choice_rule_info[0]
         choice_rule = find_choice_rule_with_id(normal_program, rule_id)
-        
+
         if choice_rule is None:
             continue
 
         choice_rule_body = find_choice_body_with_id(normal_program, f"helper(l{rule_id})")
         choice_atom = choice_literal_of_rule(choice_rule_body)
         choice_elements = choice_atom_without_relation(choice_atom)
-        
+
         if len(choice_rule_info) > 1:
             relation = choice_rule_info[1]
             guard = choice_rule_info[2]
@@ -378,6 +394,10 @@ def recreate_choice_rules_body(normal_program, choice_info_elements):
         normal_program.add_rule(choice_rule)
 
 def recreate_choice_rules(normal_program):
+    """
+    Recreate the choice rules with help of the choice_info predicates.
+    
+    """
     choice_info_rules = [str(rule) for rule in normal_program.rules if "choice_info" in str(rule)]
     choice_info = [choice_info_rule[choice_info_rule.index("(") + 1 : -2] for choice_info_rule in choice_info_rules]
     choice_info_elements = [ci.split(", ") for ci in choice_info]
@@ -385,6 +405,10 @@ def recreate_choice_rules(normal_program):
     recreate_choice_rules_body(normal_program, choice_info_elements)
 
 def remove_helper_rules(normal_program):
+    """
+    Remove those rules from the given program that
+    were only added as auxiliary information.
+    """
     to_remove = []
     for rule in normal_program.rules:
         if "helper(" in str(rule) or "choice_info" in str(rule):
@@ -393,10 +417,21 @@ def remove_helper_rules(normal_program):
     for to_remove_rule in to_remove:
         normal_program.remove_rule(to_remove_rule)
 
-###
-# Transforms a Program in reified form into the normal form
-##
+
 def reified_to_original_rules(reified_program):
+    """
+    Transform a Program in reified form into the normal form
+    
+    Parameters
+    ----------
+    reified_program: Program
+        The program in reified form.
+
+    Returns
+    -------
+    Program
+        The program in standard form.    
+    """
     reified_list = []
     for rule in reified_program.rules:
         reified_list.append(str(rule)[:-1])
@@ -421,7 +456,7 @@ def reified_to_original_rules(reified_program):
         else:
             element = rule.replace("rule(", "")[:-1]
         head, body = element.split(", ", 1)
-        
+
         rule_head = reified_head_to_original_head(
             head, atoms_of_rules_dict, outputs_dict)
         rule_body = reified_body_to_original_body(
@@ -436,6 +471,14 @@ def reified_to_original_rules(reified_program):
         else:
             normal_program.add_rule(
                 (f"{rule_head} :- {', '.join(rule_body)}."))
+    print(normal_program)
     recreate_choice_rules(normal_program)
     remove_helper_rules(normal_program)
     return normal_program
+
+p = Program("{a}. {b}.")
+
+reified = manual_reify(p, Program(""), [])
+
+
+reified_to_original_rules(reified)

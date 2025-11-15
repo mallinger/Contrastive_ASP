@@ -1,7 +1,28 @@
+"""
+User Inferface Module
+
+This module manages the user interface for contrastive explanations for ASP.
+"""
+
+
 import sys
 import json
 import re
-from PySide6.QtWidgets import QFormLayout, QScrollArea, QCompleter, QMessageBox, QFileDialog, QApplication, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QLabel, QLineEdit, QTextEdit, QMenu
+from PySide6.QtWidgets import (
+    QScrollArea,
+    QCompleter,
+    QMessageBox,
+    QFileDialog,
+    QApplication,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QTextEdit,
+    QMenu,
+)
 from PySide6.QtGui import QTextCharFormat, QColor, QIntValidator
 from PySide6.QtCore import Qt
 
@@ -21,17 +42,20 @@ TEXT_FORMAT_WHITE.setForeground(QColor("white"))
 
 
 class Window(QWidget):
+    """
+    Manage the UI for the contrastive explanations for ASP.
+    """
     def __init__(self):
         super().__init__()
 
         self.resize(900, 600)
-        self.setWindowTitle('Contrastive Explanations for ASP')
+        self.setWindowTitle("Contrastive Explanations for ASP")
 
         self.program = Program("")
         self.S = Program("")
         self.selected_rules_dict = {}
         self.predicates = []
-        
+
         number_validator = QIntValidator()
         number_validator.setRange(1, 100)
 
@@ -46,17 +70,19 @@ class Window(QWidget):
         add_program_layout.addWidget(add_program_button)
         self.program_edit = QTextEdit()
         self.program_edit.textChanged.connect(self.program_edit_changed)
-        
-        
+
         self.rules_select_scroll_area = QScrollArea()
         self.rules_select_scroll_area.setWidgetResizable(True)
-        self.rules_select_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.rules_select_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        
+        self.rules_select_scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        )
+        self.rules_select_scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+
         widget = QWidget()
         self.rules_select_layout = QVBoxLayout(widget)
-    
-        
+
         self.rules_select_scroll_area.setWidget(widget)
 
         # middle elements
@@ -93,8 +119,7 @@ class Window(QWidget):
         explanandum_layout.addWidget(self.explanandum_label)
         explanandum_layout.addWidget(self.explanandum_menu_button)
         self.explanandum_edit = QLineEdit()
-        self.explanandum_edit.textChanged.connect(
-            self.explanandum_text_changed)
+        self.explanandum_edit.textChanged.connect(self.explanandum_text_changed)
 
         self.foil_label = QLabel(text="Foil:")
         self.foil_label.setStyleSheet(LABEL_STYLE)
@@ -120,9 +145,10 @@ class Window(QWidget):
         number_of_CA_layout = QHBoxLayout()
         number_of_CA_layout.addWidget(self.number_of_CA_label)
         number_of_CA_layout.addWidget(self.number_of_CA_edit)
-        
-        
-        self.number_of_explanations_label = QLabel(text="Number of Explanations per Account:")
+
+        self.number_of_explanations_label = QLabel(
+            text="Number of Explanations per Account:"
+        )
         self.number_of_explanations_label.setStyleSheet(LABEL_STYLE)
         self.number_of_explanations_edit = QLineEdit()
         self.number_of_explanations_edit.setValidator(number_validator)
@@ -130,7 +156,7 @@ class Window(QWidget):
         number_of_explanation_layout = QHBoxLayout()
         number_of_explanation_layout.addWidget(self.number_of_explanations_label)
         number_of_explanation_layout.addWidget(self.number_of_explanations_edit)
-        
+
         start_button = QPushButton(text="Go!")
         start_button.setStyleSheet(LABEL_STYLE)
         start_button.clicked.connect(self.go)
@@ -177,10 +203,13 @@ class Window(QWidget):
         self.setLayout(outer_box)
 
     def go(self):
+        """
+        Generate contrastive explanations according to set input.
+        """
         self.result_edit.setText("")
         P = self.program_edit.toPlainText()
         try:
-            program = ground(P.replace("\n"," ").strip())
+            program = ground(P.replace("\n", " ").strip())
         except SyntaxError as syntax_error:
             msg = QMessageBox()
             msg.setText("Syntax Error")
@@ -202,26 +231,32 @@ class Window(QWidget):
         E = list(map(str.strip, E))
         F = elements_from_body_or_predicate(self.foil_edit.text())
         F = list(map(str.strip, F))
-        
+
         number_of_counterfactual_accounts = int(self.number_of_CA_edit.text())
         number_of_explanations = int(self.number_of_explanations_edit.text())
-        print(f"""Go called with program:{P}
+        print(
+            f"""Go called with program:{P}
               S: {S}
               Assumptions: {A}
               Interpretation: {I}
               Explanandum: {E}
               Foil: {F}
-              """)
-        if E == ['']:
+              """
+        )
+        if E == [""]:
             self.explanandum_label.setStyleSheet(LABEL_STYLE_RED)
             return
-        if F == ['']:
+        if F == [""]:
             self.foil_label.setStyleSheet(LABEL_STYLE_RED)
             return
         try:
             constants = constants_of_program(P)
             CEs = contrastive_explanations(
-                (program, ground(S, constants), A), (I, E, F), number_of_counterfactual_accounts, number_of_explanations)
+                (program, ground(S, constants), A),
+                (I, E, F),
+                number_of_counterfactual_accounts,
+                number_of_explanations,
+            )
             CEs_str = list(map(str, CEs))
             self.result_edit.setText("\n\n".join(CEs_str))
         except ValueError as error:
@@ -232,6 +267,9 @@ class Window(QWidget):
             msg.exec()
 
     def reset(self):
+        """
+        Clear all text edits, menus, predicates and rules select layout.
+        """
         self.program = Program("")
         self.program_edit.setText("")
         self.S = Program("")
@@ -248,9 +286,13 @@ class Window(QWidget):
         self.result_edit.setText("")
         self.selected_rules_dict = {}
 
-        deleteItemsOfLayout(self.rules_select_layout)
+        delete_items_of_layout(self.rules_select_layout)
 
     def update_autocomplete(self, words):
+        """
+        Update the autocomplete feature for assumptions, explanandum and foil
+        after the input program was edited.
+        """
         autocomplete = QCompleter(words)
         autocomplete.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.assumptions_edit.setCompleter(autocomplete)
@@ -258,11 +300,14 @@ class Window(QWidget):
         self.foil_edit.setCompleter(autocomplete)
 
     def add_program(self):
+        """
+        Add a selected answer set program of a file to the program_edit.
+        """
         path_to_file, _ = QFileDialog.getOpenFileName()
 
-        if path_to_file == '':
+        if path_to_file == "":
             return
-        with open(path_to_file, 'r', encoding='utf-8') as file:
+        with open(path_to_file, "r", encoding="utf-8") as file:
             program_str = file.read().strip().replace("\n", " ")
             faulty_rules = []
             for rule in re.split(r"\.\s+", program_str[:-1]):
@@ -274,7 +319,9 @@ class Window(QWidget):
                 except Exception:
                     msg = QMessageBox()
                     msg.setText("Error while parsing input program")
-                    msg.setInformativeText("""The input program does not have a valid ASP format.""")
+                    msg.setInformativeText(
+                        """The input program does not have a valid ASP format."""
+                    )
                     msg.setIcon(QMessageBox.Critical)
                     msg.exec()
                     return
@@ -288,34 +335,14 @@ class Window(QWidget):
             self.add_selected_rules_layouts()
             self.update_S_selection_layouts()
 
-    def update_menus(self):
-        for predicate in self.predicates:
-            self.assumption_menu.addAction(
-                predicate, lambda x=predicate: self.add_assumption(x))
-            self.explanandum_menu.addAction(
-                predicate, lambda x=predicate: self.add_explanandum(x))
-            self.foil_menu.addAction(
-                predicate, lambda x=predicate: self.add_foil(x))
-
-    def add_selected_rules_layouts(self):
-        for rule in sorted(self.program.rules):
-            rule_hbox = QHBoxLayout()
-            rule_s_button = QPushButton(text="S")
-            rule_s_button.setMaximumWidth(50)
-            rule_edit = QLabel(text=str(rule))
-            rule_s_button.clicked.connect(
-                lambda _, x=rule, y=rule_edit: self.s_selected(x, y))
-
-            rule_hbox.addWidget(rule_s_button)
-            rule_hbox.addWidget(rule_edit)
-            self.selected_rules_dict[rule] = rule_edit
-            self.rules_select_layout.addLayout(rule_hbox)
-
     def add_config(self):
+        """
+        Update the configuration from a given input json file.
+        """
         path_to_file, _ = QFileDialog.getOpenFileName()
-        if path_to_file == '':
+        if path_to_file == "":
             return
-        with open(path_to_file, 'r', encoding='utf-8') as file:
+        with open(path_to_file, "r", encoding="utf-8") as file:
             try:
                 config = json.load(file)
             except Exception:
@@ -325,15 +352,18 @@ class Window(QWidget):
                 msg.setIcon(QMessageBox.Critical)
                 msg.exec()
                 return
-            
-        if any(name not in config for name in ["S","A","I","E","F"]):
+
+        if any(name not in config for name in ["S", "A", "I", "E", "F"]):
             msg = QMessageBox()
             msg.setText("Error invalid format")
-            msg.setInformativeText("""The names of the json file are incorrect.\nThe following names need to be included:\nS, A, I, E, F""")
+            msg.setInformativeText(
+                """The names of the json file are incorrect.\n
+                The following names need to be included:\nS, A, I, E, F"""
+            )
             msg.setIcon(QMessageBox.Critical)
             msg.exec()
             return
-        
+
         self.S = Program(config["S"])
         self.S_edit.setText(str(self.S))
         self.update_S_selection_layouts()
@@ -341,12 +371,47 @@ class Window(QWidget):
         self.interpretation_edit.setText(", ".join(config["I"]))
         self.explanandum_edit.setText(", ".join(config["E"]))
         self.foil_edit.setText(", ".join(config["F"]))
-        
+
+    def update_menus(self):
+        """
+        Update the menus for assumptions, explanandum and foil
+        after the input program was edited.
+        """
+        for predicate in self.predicates:
+            self.assumption_menu.addAction(
+                predicate, lambda x=predicate: self.add_assumption(x)
+            )
+            self.explanandum_menu.addAction(
+                predicate, lambda x=predicate: self.add_explanandum(x)
+            )
+            self.foil_menu.addAction(predicate, lambda x=predicate: self.add_foil(x))
+
+    def add_selected_rules_layouts(self):
+        """
+        Append a new layout at the bottom for each rule of the input program.
+        """
+        for rule in sorted(self.program.rules):
+            rule_hbox = QHBoxLayout()
+            rule_s_button = QPushButton(text="S")
+            rule_s_button.setMaximumWidth(50)
+            rule_edit = QLabel(text=str(rule))
+            rule_s_button.clicked.connect(
+                lambda _, x=rule, y=rule_edit: self.s_selected(x, y)
+            )
+
+            rule_hbox.addWidget(rule_s_button)
+            rule_hbox.addWidget(rule_edit)
+            self.selected_rules_dict[rule] = rule_edit
+            self.rules_select_layout.addLayout(rule_hbox)
 
     def program_edit_changed(self):
+        """
+        Triggered when the program_edit text field was edited.
+        Update the UI and cached program.
+        """
         try:
             program_string = self.program_edit.toPlainText()
-            new_program = Program(program_string.replace("\n"," "))
+            new_program = Program(program_string.replace("\n", " "))
             if new_program != self.program:
                 self.program = new_program
                 self.update_ui()
@@ -354,19 +419,26 @@ class Window(QWidget):
             pass
 
     def update_ui(self):
+        """
+        Update all UI elements .
+        """
         self.predicates = sorted(predicates_of_program(ground(str(self.program))))
         self.assumption_menu.clear()
         self.explanandum_menu.clear()
         self.foil_menu.clear()
         self.update_autocomplete(self.predicates)
         self.update_menus()
-        deleteItemsOfLayout(self.rules_select_layout)
+        delete_items_of_layout(self.rules_select_layout)
         self.add_selected_rules_layouts()
         self.S = self.program.intersection(self.S)
         self.S_edit.setText(str(self.S))
         self.update_S_selection_layouts()
 
     def s_selected(self, rule, rule_edit):
+        """
+        Add or remove a rule to/from the rule_edit text field
+        if it was (de)selected at the rules_select_layout.
+        """
         if rule in self.S.rules:
             self.S.remove_rule(rule)
             rule_edit.setStyleSheet("color: white;")
@@ -376,6 +448,10 @@ class Window(QWidget):
         self.S_edit.setText(str(self.S))
 
     def update_S_selection_layouts(self):
+        """
+        Highlight or remove highlighting of a rule in the rules_select_layout
+        if it was added/removed to/from the rule_edit text field.
+        """
         for rule, rule_edit in self.selected_rules_dict.items():
             if rule in self.S.rules:
                 rule_edit.setStyleSheet("font-weight: bold")
@@ -383,38 +459,51 @@ class Window(QWidget):
                 rule_edit.setStyleSheet("color: white;")
 
     def add_assumption(self, predicate):
+        """
+        Add or remove an atom to/from the assumptions_edit. 
+        """
         current_assumptions = self.assumptions_edit.text().split(", ")
 
         if predicate in current_assumptions:
             current_assumptions.remove(predicate)
         else:
             current_assumptions.append(predicate)
-        if '' in current_assumptions:
-            current_assumptions.remove('')
+        if "" in current_assumptions:
+            current_assumptions.remove("")
         self.assumptions_edit.setText(", ".join(current_assumptions))
 
     def add_explanandum(self, predicate):
+        """
+        Add or remove an atom to/from the explanandum_edit. 
+        """
         current_explanandum = self.explanandum_edit.text().split(", ")
         if predicate in current_explanandum:
             current_explanandum.remove(predicate)
         else:
             current_explanandum.append(predicate)
-            
-        if '' in current_explanandum:
-            current_explanandum.remove('')
+
+        if "" in current_explanandum:
+            current_explanandum.remove("")
         self.explanandum_edit.setText(", ".join(current_explanandum))
 
     def add_foil(self, predicate):
+        """
+        Add or remove an atom to/from the foil_edit. 
+        """
         current_foil = self.foil_edit.text().split(", ")
         if predicate in current_foil:
             current_foil.remove(predicate)
         else:
             current_foil.append(predicate)
-        if '' in current_foil:
-            current_foil.remove('')
+        if "" in current_foil:
+            current_foil.remove("")
         self.foil_edit.setText(", ".join(current_foil))
 
     def S_edit_text_changed(self):
+        """
+        Update the rules_select_layout 
+        if the S_edit text field has changed.
+        """
         try:
             new_program = Program(self.S_edit.toPlainText())
             if new_program != self.S:
@@ -424,22 +513,36 @@ class Window(QWidget):
             pass
 
     def explanandum_text_changed(self):
+        """
+        Resets the explanandum_label to normal style
+        if it is no longer empty
+        """
         if self.explanandum_edit.text != "":
             self.explanandum_label.setStyleSheet(LABEL_STYLE)
 
     def foil_text_changed(self):
+        """
+        Resets the foil_label to normal style
+        if it is no longer empty
+        """
         if self.foil_edit.text != "":
             self.foil_label.setStyleSheet(LABEL_STYLE)
 
 
 def main():
+    """
+    Start the UI. 
+    """
     app = QApplication(sys.argv)
     window = Window()
     window.show()
     sys.exit(app.exec())
 
 
-def deleteItemsOfLayout(layout):
+def delete_items_of_layout(layout):
+    """
+    Remove a given layout of the rules_select_layout.
+    """
     if layout is not None:
         while layout.count():
             item = layout.takeAt(0)
@@ -447,8 +550,8 @@ def deleteItemsOfLayout(layout):
             if widget is not None:
                 widget.setParent(None)
             else:
-                deleteItemsOfLayout(item.layout())
+                delete_items_of_layout(item.layout())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
