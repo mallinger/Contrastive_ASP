@@ -12,7 +12,7 @@ which follows the definitions provided by Eiter et al., and a user-friendly inte
 
 # Getting Started
 ## Dependencies
-- PySide6 V.6.10
+- PySide6 V6.10
 - Clingo V5.8
 ## Executing program
 Run `python.exe ui.py`
