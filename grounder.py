@@ -24,9 +24,13 @@ from utils import (
 )
 from program import Program, Rule
 
+# word  starting with lowercase letter not followed by a '(' and exluding 'not'
 REGEX_CONSTANTS = r"(?!not)\b[a-z0-9]\w*\b(?!\()"
+# two dots between two numbers
 REGEX_RANGE = r"(\d+)\.\.(\d+)"
+# word starting with an uppercase letter
 REGEX_VARIABLES = r"[^a-z]([A-Z]\w*)"
+# substitute variable 'v' such that there is no word right before or after the variable
 REGEX_SUBSTITUTION = lambda v: rf"(?<![\w]){v}(?![\w])"
 
 
@@ -503,7 +507,7 @@ def constants_of_program(program_string):
 
 def ground(program_string, constants=None):
     """
-    Ground an answer set program by expanding ranges and parsing arithmetic expressions
+    Ground an answer set program by expanding ranges and parsing arithmetic expressions.
     
     Parameters
     ----------
