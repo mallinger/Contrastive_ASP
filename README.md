@@ -15,7 +15,13 @@ which follows the definitions provided by Eiter et al., and a user-friendly inte
 - PySide6 V6.10
 - Clingo V5.8
 ## Executing program
-Run `python.exe ui.py`
+```bash 
+pip install -r requirements.txt
+```
+```bash
+python.exe ui.py
+```
+
 
 # License
 This project is licensed under the MIT License - see the LICENSE.md file for details
