@@ -38,7 +38,7 @@ def solve_return_model(programs):
         solveResult = handle.get()
     if solveResult.satisfiable:
         optimum = models[-1].split(" ")
-        #optimum = list(map(lambda l: l.replace(",", ", "), optimum))
+        optimum = list(map(lambda l: l.replace(",", ", "), optimum))
         return optimum
     return "UNSAT"
 

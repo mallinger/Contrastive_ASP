@@ -16,6 +16,11 @@ from program import Program, Rule
 
 
 def add_reified_atom(atom, atoms, rule_index, reified, amount_of_rules):
+    """
+    Append rules to the reified program to map the given atom to the given 
+    rule index.
+    """
+
     if atom not in atoms:
         atoms[atom] = amount_of_rules + len(atoms) + 1
     current_atom_index = atoms[atom]
@@ -26,6 +31,11 @@ def add_reified_atom(atom, atoms, rule_index, reified, amount_of_rules):
     reified.add_rule(f"literal_tuple({current_atom_index}).")
 
 def add_reified_literal(literal, atoms, rule_index, reified, amount_of_rules):
+    """
+    Append rules to the reified program to map the given literal to the given 
+    rule index.
+    """
+
     reified.add_rule(f"literal_tuple({rule_index}).")
     negated = False
     if "not" in literal:
@@ -42,6 +52,11 @@ def add_reified_literal(literal, atoms, rule_index, reified, amount_of_rules):
 
 
 def add_reified_weighted_literal(weighted_literal, atoms, rule_index, reified, amount_of_rules):
+    """
+    Append rules to the reified program to map the given weighted literal to the given 
+    rule index.
+    """
+
     reified.add_rule(f"weighted_literal_tuple({rule_index}).")
     negated = False
     if "not" in weighted_literal:
@@ -58,6 +73,10 @@ def add_reified_weighted_literal(weighted_literal, atoms, rule_index, reified, a
         f"weighted_literal_tuple({rule_index}, {"-" if negated else ""}{current_atom_index}, 1).")
 
 def manual_reify_head(head, atoms, rule_index, reified, amount_of_rules):
+    """
+    Reify a given rule head.
+    """
+
     if head == []:
         return
     for head_atom in head:
@@ -65,14 +84,26 @@ def manual_reify_head(head, atoms, rule_index, reified, amount_of_rules):
 
 
 def manual_reify_body(body, atoms, rule_index, reified, amount_of_rules):
+    """
+    Reify a given rule body.
+    """
+
     for body_literal in body:
         add_reified_literal(body_literal, atoms, rule_index, reified, amount_of_rules)
 
 def manual_reify_rule(rule, atoms, rule_index, reified, amount_of_rules):
+    """
+    Reify a given rule.
+    """
+
     manual_reify_body(rule.body, atoms, rule_index, reified, amount_of_rules)
     manual_reify_head(rule.head, atoms, rule_index, reified, amount_of_rules)
 
 def manual_reify_choice_body(rule, atoms, rule_index, reified, amount_of_rules):
+    """
+    Reify a given rule with a choice literal in its body.
+    """
+
     choice_atom = choice_literal_of_rule(rule.body)
     choice_elements, relation, guard = parse_choice_atom(choice_atom)
     guard = int(guard)
@@ -131,6 +162,10 @@ def manual_reify_choice_body(rule, atoms, rule_index, reified, amount_of_rules):
     manual_reify_rule(rule_without_choice_atom, atoms, rule_index, reified, amount_of_rules)
 
 def add_reified_helper_b_rule(atoms, rule_index, reified, amount_of_rules, choice_elements, guard):
+    """
+    Appends helper rules needed to represent choice rules in reified form.
+    """
+
     reified.add_rule(f"rule(disjunction(b{rule_index}), sum(b{rule_index},{guard})).")
     rule_b = Rule(f"helper(b{rule_index}).")
     for choice_element_key in choice_elements.keys():
@@ -138,6 +173,10 @@ def add_reified_helper_b_rule(atoms, rule_index, reified, amount_of_rules, choic
     manual_reify_rule(rule_b, atoms, f"b{rule_index}", reified, amount_of_rules)
 
 def manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules):
+    """
+    Reify a given choice rule.
+    """
+
     choice_elements, relation, guard = parse_choice_atom(rule.head[0])
     for atom in choice_elements:
         add_reified_atom(atom, atoms, rule_index, reified, amount_of_rules)
@@ -212,6 +251,10 @@ def manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules):
         manual_reify_rule(rule_e, atoms, f"e{rule_index}", reified, amount_of_rules)
 
 def manual_reify_choice(rule, atoms, rule_index, reified, amount_of_rules):
+    """
+    Reify a given choice rule or rule containing a choice literal. 
+    """
+
     if rule.is_choice():
         manual_reify_choice_head(rule, atoms, rule_index, reified, amount_of_rules)
     else:
@@ -219,6 +262,25 @@ def manual_reify_choice(rule, atoms, rule_index, reified, amount_of_rules):
 
 
 def manual_reify(program, S, meta_atoms):
+    """
+    Reify an ASP program into a rule-based meta-representation.
+
+    Parameters
+    ----------
+    program : Program
+        The input answer set program whose rules will be reified.
+    S : Program
+        The answer set program of fixed rules.
+    meta_atoms : list
+        A list of atoms needed to represent explanandum, foil and
+        assumptions.
+        
+    Returns
+    -------
+    Program
+        A new Program object in reified representation.
+    """
+
     atoms = {}
     reified_program = Program("")
     rules = sorted(program.rules, key=lambda r:str(r))
@@ -253,6 +315,22 @@ def manual_reify(program, S, meta_atoms):
     return reified_program
 
 def reified_element_to_dict(name, elements):
+    """
+    Return a dictionary as a mapping from the first argument of 
+    the predicate of the given elements to the second one.
+    
+    
+    Parameters:
+    -----------
+    name : str
+        Either atom_tuple, literal_tuple or weighted_literal_tuple
+    elements : list
+        List of reified atoms with predicate names: atom_tuple, literal_tuple or
+        weighted_literal_tuple
+        
+    Returns:
+        dictionary between ids
+    """
     elements_dict = {}
     for element in elements:
         element = element.replace(f"{name}(", "")[:-1]
@@ -267,6 +345,10 @@ def reified_element_to_dict(name, elements):
     return elements_dict
 
 def reified_output_to_dict(reified_outputs):
+    """
+    Return a dictionary with id as the key and atom as the value from
+    the given reified_outputs list.
+    """
     outputs_dict = {}
     for reified_output in reified_outputs:
         reified_output = reified_output.replace("output(", "")[:-1]
@@ -277,6 +359,9 @@ def reified_output_to_dict(reified_outputs):
 
 
 def reified_head_to_original_head(head, atoms_of_rules_dict, outputs_dict):
+    """
+    Transforms a rule head in reified form to a rule head in standard form.
+    """
     rule_head = []
     if "disjunction" in head:
         head = head.replace("disjunction(", "")[:-1]
@@ -294,6 +379,10 @@ def reified_head_to_original_head(head, atoms_of_rules_dict, outputs_dict):
 
 
 def reified_body_to_original_body(body, literals_of_rules_dict, weighted_literals_of_rule_dict, outputs_dict):
+    """
+    Transforms a rule body in reified form to a rule body in standard form.
+    """
+
     rule_body = []
     if "normal" in body:
         body = body.replace("normal(", "")[:-1]
@@ -324,16 +413,30 @@ def reified_body_to_original_body(body, literals_of_rules_dict, weighted_literal
     return rule_body
 
 def find_choice_head_with_id(program, literal):
+    """
+    Return the rule head of a choice rule that
+    contains the given literal in the body.
+    """
+
     for rule in program.rules:
         if rule.is_choice() and literal in rule.body:
             return rule.head[0]
 
 def find_choice_body_with_id(program, atom):
+    """
+    Return the body of a rule that contains a given atom
+    in the head.
+    """
     for rule in program.rules:
         if atom in rule.head:
             return rule.body
 
 def find_choice_rule_with_id(program, rule_id):
+    """
+    Return the choice rule that contains a literal with the 
+    [not] helper(l{rule_id}) or helper(n{rule_id}) as an argument.
+    """
+
     for rule in program.rules:
         if f"helper(l{rule_id})" in rule.body or f"not helper(l{rule_id})" in rule.body:
             if not f"not helper(m{rule_id})" in rule.body:
@@ -353,6 +456,9 @@ def find_choice_rule_with_id(program, rule_id):
             return choice_rule
 
 def recreate_choice_rules_head(normal_program, choice_info_elements):
+    """
+    Recreate the choice rules heads with help of the choice_info predicates.
+    """
     for choice_rule in choice_info_elements:
         rule_id = choice_rule[0]
         choice_head = find_choice_head_with_id(normal_program, f"helper(a{rule_id})")
@@ -374,6 +480,10 @@ def recreate_choice_rules_head(normal_program, choice_info_elements):
                 normal_program.add_rule(f"{choice_head}.")
 
 def recreate_choice_rules_body(normal_program, choice_info_elements):
+    """
+    Recreate the choice rules bodies with help of the choice_info predicates.
+    """
+
     for choice_rule_info in choice_info_elements:
         rule_id = choice_rule_info[0]
         choice_rule = find_choice_rule_with_id(normal_program, rule_id)
@@ -396,10 +506,11 @@ def recreate_choice_rules_body(normal_program, choice_info_elements):
 def recreate_choice_rules(normal_program):
     """
     Recreate the choice rules with help of the choice_info predicates.
-    
     """
+
     choice_info_rules = [str(rule) for rule in normal_program.rules if "choice_info" in str(rule)]
-    choice_info = [choice_info_rule[choice_info_rule.index("(") + 1 : -2] for choice_info_rule in choice_info_rules]
+    choice_info = [choice_info_rule[choice_info_rule.index("(") + 1 : -2] for
+                   choice_info_rule in choice_info_rules]
     choice_info_elements = [ci.split(", ") for ci in choice_info]
     recreate_choice_rules_head(normal_program, choice_info_elements)
     recreate_choice_rules_body(normal_program, choice_info_elements)
@@ -409,6 +520,7 @@ def remove_helper_rules(normal_program):
     Remove those rules from the given program that
     were only added as auxiliary information.
     """
+
     to_remove = []
     for rule in normal_program.rules:
         if "helper(" in str(rule) or "choice_info" in str(rule):
@@ -432,6 +544,7 @@ def reified_to_original_rules(reified_program):
     Program
         The program in standard form.    
     """
+
     reified_list = []
     for rule in reified_program.rules:
         reified_list.append(str(rule)[:-1])
@@ -471,14 +584,6 @@ def reified_to_original_rules(reified_program):
         else:
             normal_program.add_rule(
                 (f"{rule_head} :- {', '.join(rule_body)}."))
-    print(normal_program)
     recreate_choice_rules(normal_program)
     remove_helper_rules(normal_program)
     return normal_program
-
-p = Program("{a}. {b}.")
-
-reified = manual_reify(p, Program(""), [])
-
-
-reified_to_original_rules(reified)
