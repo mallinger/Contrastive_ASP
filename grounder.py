@@ -24,7 +24,7 @@ from utils import (
 )
 from program import Program, Rule
 
-# word  starting with lowercase letter not followed by a '(' and exluding 'not'
+# word starting with lowercase letter not followed by a '(' and excluding 'not'
 REGEX_CONSTANTS = r"(?!not)\b[a-z0-9]\w*\b(?!\()"
 # two dots between two numbers
 REGEX_RANGE = r"(\d+)\.\.(\d+)"
